@@ -32,11 +32,13 @@ import {
     TableCell,
     TableContainer,
     TableHead,
-    TableRow
+    TableRow,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AddIcon from '@mui/icons-material/Add';
 import RepeatIcon from '@mui/icons-material/Repeat';
@@ -278,6 +280,8 @@ const ModbusTerminal = () => {
     });
 
     const [autoScroll, setAutoScroll] = useState(true);
+    const [showTimestamps, setShowTimestamps] = useState(true);
+    const [displayHex, setDisplayHex] = useState(true);
 
     const [writeFormat, setWriteFormat] = useState('hex'); // 'hex' or 'dec'
 
@@ -1064,14 +1068,14 @@ const ModbusTerminal = () => {
                 <Grid item xs={12} md={8}>
                     {/* Raw Data Terminal */}
                     <Paper
-                        ref={rawTerminalRef}
                         variant="outlined"
                         sx={{
-                            height: '40vh',
+                            height: '40.5vh',
                             display: 'flex',
                             flexDirection: 'column',
                             bgcolor: 'black',
-                            overflow: 'hidden'
+                            overflow: 'hidden',
+                            mb: 2
                         }}
                     >
                         <Box sx={{ 
@@ -1084,30 +1088,50 @@ const ModbusTerminal = () => {
                             <Typography variant="subtitle2" sx={{ color: 'white' }}>
                                 Raw Data
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            size="small"
+                                            checked={showTimestamps}
+                                            onChange={(e) => setShowTimestamps(e.target.checked)}
+                                        />
+                                    }
+                                    label={
+                                        <Typography variant="body2" sx={{ color: 'white' }}>
+                                            Timestamps
+                                        </Typography>
+                                    }
+                                />
                                 <FormControlLabel
                                     control={
                                         <Switch
                                             size="small"
                                             checked={autoScroll}
                                             onChange={(e) => setAutoScroll(e.target.checked)}
-                                            sx={{ color: 'white' }}
                                         />
                                     }
-                                    label="Auto-scroll"
-                                    sx={{ color: 'white', mr: 1 }}
+                                    label={
+                                        <Typography variant="body2" sx={{ color: 'white' }}>
+                                            Auto-scroll
+                                        </Typography>
+                                    }
                                 />
                                 <Button
-                                    startIcon={<DeleteIcon />}
+                                    startIcon={<ClearIcon />}
                                     onClick={() => setReceivedData([])}
                                     size="small"
-                                    sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' } }}
+                                    sx={{ 
+                                        color: 'white',
+                                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                    }}
                                 >
                                     Clear
                                 </Button>
                             </Box>
                         </Box>
-                        <Box 
+                        <Box
+                            ref={rawTerminalRef}
                             role="log"
                             sx={{ 
                                 p: 1,
@@ -1124,31 +1148,50 @@ const ModbusTerminal = () => {
                                         display: 'flex',
                                         alignItems: 'flex-start',
                                         mb: 0.5,
-                                        color: item.type === 'tx' ? '#4CAF50' : '#2196F3'
+                                        color: item.type === 'tx' ? '#4CAF50' : '#2196F3',
+                                        '&:hover .copy-button': {
+                                            opacity: 1
+                                        }
                                     }}
                                 >
-                                    <Typography 
-                                        component="span"
-                                        sx={{ 
-                                            color: 'rgba(255, 255, 255, 0.5)',
-                                            mr: 1,
-                                            fontSize: '0.85rem',
-                                            fontFamily: 'monospace',
-                                            whiteSpace: 'nowrap'
-                                        }}
-                                    >
-                                        {formatTimestamp(item.timestamp)}
-                                    </Typography>
+                                    {showTimestamps && (
+                                        <Typography 
+                                            component="span"
+                                            sx={{ 
+                                                color: 'rgba(255, 255, 255, 0.5)',
+                                                mr: 1,
+                                                fontSize: '0.85rem',
+                                                fontFamily: 'monospace',
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            {formatTimestamp(item.timestamp)}
+                                        </Typography>
+                                    )}
                                     <Typography 
                                         component="div" 
                                         sx={{ 
                                             fontFamily: 'monospace',
                                             whiteSpace: 'pre-wrap',
-                                            wordBreak: 'break-all'
+                                            wordBreak: 'break-all',
+                                            flexGrow: 1
                                         }}
                                     >
                                         {item.data}
                                     </Typography>
+                                    <IconButton
+                                        className="copy-button"
+                                        size="small"
+                                        onClick={() => navigator.clipboard.writeText(item.data)}
+                                        sx={{ 
+                                            color: 'white', 
+                                            opacity: 0,
+                                            transition: 'opacity 0.2s',
+                                            ml: 1
+                                        }}
+                                    >
+                                        <ContentCopyIcon fontSize="small" />
+                                    </IconButton>
                                 </Box>
                             ))}
                         </Box>
@@ -1159,8 +1202,7 @@ const ModbusTerminal = () => {
                         ref={decodedTerminalRef}
                         variant="outlined"
                         sx={{
-                            mt: 2,
-                            height: '40vh',
+                            height: '40.5vh',
                             display: 'flex',
                             flexDirection: 'column',
                             bgcolor: 'black',
@@ -1177,6 +1219,33 @@ const ModbusTerminal = () => {
                             <Typography variant="subtitle2" sx={{ color: 'white' }}>
                                 Decoded Modbus Data
                             </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            size="small"
+                                            checked={displayHex}
+                                            onChange={(e) => setDisplayHex(e.target.checked)}
+                                        />
+                                    }
+                                    label={
+                                        <Typography variant="body2" sx={{ color: 'white' }}>
+                                            Hex Values
+                                        </Typography>
+                                    }
+                                />
+                                <Button
+                                    startIcon={<ClearIcon />}
+                                    onClick={() => setReceivedData([])}
+                                    size="small"
+                                    sx={{ 
+                                        color: 'white',
+                                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                                    }}
+                                >
+                                    Clear
+                                </Button>
+                            </Box>
                         </Box>
                         <Box 
                             role="log"
@@ -1262,7 +1331,9 @@ const ModbusTerminal = () => {
                                                                 `Coil ${decoded.startAddress + i}: ${value ? 'ON' : 'OFF'}` :
                                                             decoded.functionCode === 0x02 ?
                                                                 `Discrete Input ${decoded.startAddress + i}: ${value ? 'ON' : 'OFF'}` :
-                                                                `Register ${decoded.startAddress + i}: ${value} (0x${value.toString(16).padStart(4, '0')})`
+                                                                `Register ${decoded.startAddress + i}: ${displayHex ? 
+                                                                    `0x${value.toString(16).padStart(4, '0')}` : 
+                                                                    value}`
                                                             }
                                                         </Typography>
                                                     ))}
@@ -1275,243 +1346,346 @@ const ModbusTerminal = () => {
                         </Box>
                     </Paper>
                 </Grid>
-
-                {/* Settings Panel */}
                 <Grid item xs={12} md={4}>
+                    {/* Settings Panel */}
                     <Paper 
                         variant="outlined" 
                         sx={{ 
                             p: 2,
                             height: '82vh',
+                            maxHeight: '83vh',
                             display: 'flex',
-                            flexDirection: 'column'
+                            flexDirection: 'column',
+                            bgcolor: 'background.paper'
                         }}
                     >
-                        <Typography variant="h6" gutterBottom>
-                            Connection Settings
-                        </Typography>
-                        <Box sx={{ mb: 2 }}>
-                            <Button
-                                variant="contained"
-                                onClick={requestPort}
-                                disabled={isConnected}
-                                fullWidth
-                            >
-                                Select COM Port
-                            </Button>
-                            {(port || isConnected) && (
-                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
-                                    Connected to: {getPortDisplayName()}
-                                </Typography>
-                            )}
-                        </Box>
-
-                        <Box sx={{ mb: 2 }}>
-                            <FormControl fullWidth>
-                                <InputLabel id="baud-rate-label">Baud Rate</InputLabel>
-                                <Select
-                                    labelId="baud-rate-label"
-                                    value={baudRate}
-                                    label="Baud Rate"
-                                    onChange={(e) => setBaudRate(e.target.value)}
-                                    disabled={isConnected}
-                                >
-                                    {BAUD_RATES.map((rate) => (
-                                        <MenuItem key={rate} value={rate}>
-                                            {rate}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Box>
-
-                        <Box sx={{ mb: 2 }}>
-                            <Button
-                                variant="contained"
-                                color={isConnected ? "error" : "primary"}
-                                onClick={isConnected ? disconnect : connectPort}
-                                startIcon={isConnected ? <StopIcon /> : <PlayArrowIcon />}
-                                fullWidth
-                                disabled={!port}
-                            >
-                                {isConnected ? 'Disconnect' : 'Connect'}
-                            </Button>
-                        </Box>
-
-                        <Typography variant="h6" sx={{ mb: 2, mt: 3 }}>
-                            Modbus Settings
-                        </Typography>
-
-                        <Box sx={{ mb: 2 }}>
-                            <FormControl fullWidth>
-                                <InputLabel id="slave-id-label">Slave ID</InputLabel>
-                                <Select
-                                    labelId="slave-id-label"
-                                    value={modbusConfig.slaveId}
-                                    label="Slave ID"
-                                    onChange={(e) => setModbusConfig(prev => ({
-                                        ...prev,
-                                        slaveId: parseInt(e.target.value)
-                                    }))}
-                                >
-                                    {[...Array(247)].map((_, i) => (
-                                        <MenuItem key={i + 1} value={i + 1}>
-                                            {i + 1}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Box>
-
-                        <Box sx={{ mb: 2 }}>
-                            <FormControl fullWidth>
-                                <InputLabel id="function-code-label">Function</InputLabel>
-                                <Select
-                                    labelId="function-code-label"
-                                    value={modbusConfig.functionCode}
-                                    label="Function"
-                                    onChange={(e) => setModbusConfig(prev => ({
-                                        ...prev,
-                                        functionCode: e.target.value,
-                                        // Force quantity to 1 for Write Single Coil and Write Single Register
-                                        quantity: (e.target.value === '05' || e.target.value === '06') ? 1 : prev.quantity,
-                                        // Reset values when changing function
-                                        values: []
-                                    }))}
-                                >
-                                    {MODBUS_FUNCTIONS_LIST.map(({code, name}) => (
-                                        <MenuItem key={code} value={code}>
-                                            {name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Box>
-
-                        <Box sx={{ mb: 2 }}>
-                            <TextField
-                                fullWidth
-                                label="Start Address"
-                                type="number"
-                                value={modbusConfig.startAddress}
-                                onChange={(e) => setModbusConfig(prev => ({
-                                    ...prev,
-                                    startAddress: parseInt(e.target.value) || 0
-                                }))}
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                            />
-                        </Box>
-
-                        <Box sx={{ mb: 2 }}>
-                            <TextField
-                                fullWidth
-                                type="number"
-                                label="Quantity"
-                                value={modbusConfig.quantity}
-                                onChange={(e) => setModbusConfig(prev => ({
-                                    ...prev,
-                                    quantity: parseInt(e.target.value) || 1
-                                }))}
-                                // Disable for Write Single Coil and Write Single Register
-                                disabled={modbusConfig.functionCode === '05' || modbusConfig.functionCode === '06'}
-                                inputProps={{
-                                    min: 1,
-                                    max: 125
-                                }}
-                            />
-                        </Box>
-
-                        {isWriteFunction(modbusConfig.functionCode) && (
+                        {/* Connection Settings Group */}
+                        <Paper 
+                            variant="outlined" 
+                            sx={{ 
+                                p: 2, 
+                                mb: 3,
+                                bgcolor: 'background.default'
+                            }}
+                        >
+                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                Connection Settings
+                                {isConnected && (
+                                    <Box
+                                        component="span"
+                                        sx={{
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: '50%',
+                                            bgcolor: '#4CAF50',
+                                            display: 'inline-block'
+                                        }}
+                                    />
+                                )}
+                            </Typography>
                             <Box sx={{ mb: 2 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                    <Typography variant="subtitle2">Write Values</Typography>
-                                    {!['05', '0F'].includes(modbusConfig.functionCode) && (
-                                        <ToggleButtonGroup
-                                            size="small"
-                                            value={writeFormat}
-                                            exclusive
-                                            onChange={(e, newFormat) => {
-                                                if (newFormat !== null) {
-                                                    setWriteFormat(newFormat);
-                                                }
-                                            }}
-                                        >
-                                            <ToggleButton value="hex">HEX</ToggleButton>
-                                            <ToggleButton value="dec">DEC</ToggleButton>
-                                        </ToggleButtonGroup>
-                                    )}
-                                </Box>
-                                <Grid container spacing={1}>
-                                    {Array.from({ length: Math.min(modbusConfig.quantity, ['05', '0F'].includes(modbusConfig.functionCode) ? 12 : 21) }).map((_, i) => (
-                                        <Grid item xs={['05', '0F'].includes(modbusConfig.functionCode) ? 6 : 4} key={i}>
-                                            <Box>
-                                                {['05', '0F'].includes(modbusConfig.functionCode) ? (
-                                                    <FormControlLabel
-                                                        control={
-                                                            <Switch
-                                                                size="small"
-                                                                checked={!!modbusConfig.values[i]}
-                                                                onChange={(e) => handleValueChange(i, e.target.checked)}
-                                                            />
-                                                        }
-                                                        label={
-                                                            <Typography variant="caption">
-                                                                {`Coil ${modbusConfig.startAddress + i}: ${modbusConfig.values[i] ? "ON" : "OFF"}`}
-                                                            </Typography>
-                                                        }
-                                                        sx={{ 
-                                                            m: 0,
-                                                            '& .MuiFormControlLabel-label': {
-                                                                fontSize: '0.75rem',
-                                                                minWidth: '80px'
+                                <Button
+                                    variant="contained"
+                                    onClick={requestPort}
+                                    disabled={isConnected}
+                                    fullWidth
+                                >
+                                    Select COM Port
+                                </Button>
+                                {(port || isConnected) && (
+                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+                                        Connected to: {getPortDisplayName()}
+                                    </Typography>
+                                )}
+                            </Box>
+
+                            <Box sx={{ mb: 2 }}>
+                                <FormControl fullWidth>
+                                    <InputLabel id="baud-rate-label">Baud Rate</InputLabel>
+                                    <Select
+                                        labelId="baud-rate-label"
+                                        value={baudRate}
+                                        label="Baud Rate"
+                                        onChange={(e) => setBaudRate(e.target.value)}
+                                        disabled={isConnected}
+                                    >
+                                        {BAUD_RATES.map((rate) => (
+                                            <MenuItem key={rate} value={rate}>
+                                                {rate}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+
+                            <Box sx={{ mb: 2 }}>
+                                <Button
+                                    variant="contained"
+                                    color={isConnected ? "error" : "primary"}
+                                    onClick={isConnected ? disconnect : connectPort}
+                                    startIcon={isConnected ? <StopIcon /> : <PlayArrowIcon />}
+                                    fullWidth
+                                    disabled={!port}
+                                >
+                                    {isConnected ? 'Disconnect' : 'Connect'}
+                                </Button>
+                            </Box>
+
+                            <Typography variant="h6" sx={{ mb: 2, mt: 3 }}>
+                                Modbus Settings
+                            </Typography>
+
+                            <Box sx={{ mb: 2 }}>
+                                <FormControl fullWidth>
+                                    <InputLabel id="slave-id-label">Slave ID</InputLabel>
+                                    <Select
+                                        labelId="slave-id-label"
+                                        value={modbusConfig.slaveId}
+                                        label="Slave ID"
+                                        onChange={(e) => setModbusConfig(prev => ({
+                                            ...prev,
+                                            slaveId: parseInt(e.target.value)
+                                        }))}
+                                    >
+                                        {[...Array(247)].map((_, i) => (
+                                            <MenuItem key={i + 1} value={i + 1}>
+                                                {i + 1}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+
+                            <Box sx={{ mb: 2 }}>
+                                <FormControl fullWidth>
+                                    <InputLabel id="function-code-label">Function</InputLabel>
+                                    <Select
+                                        labelId="function-code-label"
+                                        value={modbusConfig.functionCode}
+                                        label="Function"
+                                        onChange={(e) => setModbusConfig(prev => ({
+                                            ...prev,
+                                            functionCode: e.target.value,
+                                            // Force quantity to 1 for Write Single Coil and Write Single Register
+                                            quantity: (e.target.value === '05' || e.target.value === '06') ? 1 : prev.quantity,
+                                            // Reset values when changing function
+                                            values: []
+                                        }))}
+                                    >
+                                        {MODBUS_FUNCTIONS_LIST.map(({code, name}) => (
+                                            <MenuItem key={code} value={code}>
+                                                {name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+
+                            <Box sx={{ mb: 2 }}>
+                                <TextField
+                                    fullWidth
+                                    label="Start Address"
+                                    type="number"
+                                    value={modbusConfig.startAddress}
+                                    onChange={(e) => setModbusConfig(prev => ({
+                                        ...prev,
+                                        startAddress: parseInt(e.target.value) || 0
+                                    }))}
+                                    InputLabelProps={{
+                                        shrink: true,
+                                    }}
+                                />
+                            </Box>
+
+                            <Box sx={{ mb: 2 }}>
+                                <TextField
+                                    fullWidth
+                                    type="number"
+                                    label="Quantity"
+                                    value={modbusConfig.quantity}
+                                    onChange={(e) => setModbusConfig(prev => ({
+                                        ...prev,
+                                        quantity: parseInt(e.target.value) || 1
+                                    }))}
+                                    // Disable for Write Single Coil and Write Single Register
+                                    disabled={modbusConfig.functionCode === '05' || modbusConfig.functionCode === '06'}
+                                    inputProps={{
+                                        min: 1,
+                                        // Limit quantity based on function code
+                                        max: ['05', '06'].includes(modbusConfig.functionCode) ? 1 :
+                                             ['0F', '10'].includes(modbusConfig.functionCode) ? 12 : 125
+                                    }}
+                                />
+                            </Box>
+
+                            {isWriteFunction(modbusConfig.functionCode) && (
+                                <Box sx={{ mb: 2 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                        <Typography variant="subtitle2">Write Values</Typography>
+                                        {!['05', '0F'].includes(modbusConfig.functionCode) && (
+                                            <ToggleButtonGroup
+                                                size="small"
+                                                value={writeFormat}
+                                                exclusive
+                                                onChange={(e, newFormat) => {
+                                                    if (newFormat !== null) {
+                                                        setWriteFormat(newFormat);
+                                                    }
+                                                }}
+                                            >
+                                                <ToggleButton value="hex">HEX</ToggleButton>
+                                                <ToggleButton value="dec">DEC</ToggleButton>
+                                            </ToggleButtonGroup>
+                                        )}
+                                    </Box>
+                                    <Grid container spacing={1}>
+                                        {Array.from({ length: Math.min(modbusConfig.quantity, ['05', '0F', '10'].includes(modbusConfig.functionCode) ? 12 : 21) }).map((_, i) => (
+                                            <Grid item xs={['05', '0F'].includes(modbusConfig.functionCode) ? 6 : 4} key={i}>
+                                                <Box>
+                                                    {['05', '0F'].includes(modbusConfig.functionCode) ? (
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Switch
+                                                                    size="small"
+                                                                    checked={!!modbusConfig.values[i]}
+                                                                    onChange={(e) => handleValueChange(i, e.target.checked)}
+                                                                />
                                                             }
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <>
-                                                        <Typography variant="caption" sx={{ mb: 0.5, display: 'block' }}>
-                                                            {`Register ${modbusConfig.startAddress + i}`}
-                                                        </Typography>
-                                                        <TextField
-                                                            size="small"
-                                                            value={formatWriteValue(modbusConfig.values[i])}
-                                                            onChange={(e) => handleValueChange(i, e.target.value)}
-                                                            inputProps={{
-                                                                style: { fontFamily: 'monospace' }
+                                                            label={
+                                                                <Typography variant="caption">
+                                                                    {`Coil ${modbusConfig.startAddress + i}: ${modbusConfig.values[i] ? "ON" : "OFF"}`}
+                                                                </Typography>
+                                                            }
+                                                            sx={{ 
+                                                                m: 0,
+                                                                '& .MuiFormControlLabel-label': {
+                                                                    fontSize: '0.75rem',
+                                                                    minWidth: '80px'
+                                                                }
                                                             }}
                                                         />
-                                                    </>
-                                                )}
-                                            </Box>
-                                        </Grid>
-                                    ))}
-                                </Grid>
+                                                    ) : (
+                                                        <>
+                                                            <Typography variant="caption" sx={{ mb: 0.5, display: 'block' }}>
+                                                                {`Register ${modbusConfig.startAddress + i}`}
+                                                            </Typography>
+                                                            <TextField
+                                                                size="small"
+                                                                value={formatWriteValue(modbusConfig.values[i])}
+                                                                onChange={(e) => handleValueChange(i, e.target.value)}
+                                                                inputProps={{
+                                                                    style: { fontFamily: 'monospace' }
+                                                                }}
+                                                            />
+                                                        </>
+                                                    )}
+                                                </Box>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </Box>
+                            )}
+                            <Box sx={{ mb: 2 }}>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={sendDataToPort}
+                                    disabled={!isConnected}
+                                    fullWidth
+                                >
+                                    Send Modbus Request
+                                </Button>
                             </Box>
-                        )}
-                        <Box sx={{ mb: 2 }}>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={sendDataToPort}
-                                disabled={!isConnected}
-                                fullWidth
-                            >
-                                Send Modbus Request
-                            </Button>
-                        </Box>
+                        </Paper>
                     </Paper>
                 </Grid>
             </Grid>
 
-            {/* About section */}
-            <Paper variant="outlined" sx={{ p: 2, mt: 'auto' }}>
+            {/* About this tool panel */}
+            <Paper 
+                variant="outlined" 
+                sx={{ 
+                    p: 2, 
+                    mt: 3,
+                    bgcolor: 'background.paper' 
+                }}
+            >
                 <Typography variant="h6" gutterBottom>
                     About this tool
                 </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    The Modbus Terminal is a comprehensive tool for communicating with Modbus RTU devices through USB/COM ports. It supports all standard Modbus functions including:
+                </Typography>
+                <Typography variant="body2" component="div" color="text.secondary" sx={{ mb: 1, pl: 2 }}>
+                    • Read Coils (01), Discrete Inputs (02), Holding Registers (03), and Input Registers (04)<br />
+                    • Write Single Coil (05) and Single Register (06)<br />
+                    • Write Multiple Coils (15) and Multiple Registers (16)
+                </Typography>
                 <Typography variant="body2" color="text.secondary">
-                    The Modbus Terminal is a tool for communicating with Modbus devices through USB/COM ports.
+                    Features include real-time data monitoring with timestamp display, hex/decimal value conversion, and automatic message decoding. 
+                    The tool provides both raw data view for debugging and decoded Modbus data for easy interpretation.
+                </Typography>
+
+                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                    About the Modbus Protocol
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Modbus is an open-source, widely-used industrial communication protocol developed by Modicon in 1979. 
+                    It operates on a master-slave principle where one master device can communicate with up to 247 slave devices. 
+                    Each slave device has a unique address (1-247) and responds to commands from the master.
+                </Typography>
+
+                <Typography variant="subtitle2" color="text.primary" gutterBottom>
+                    Data Types and Memory Map
+                </Typography>
+                <Typography variant="body2" component="div" color="text.secondary" sx={{ mb: 2, pl: 2 }}>
+                    Modbus devices organize data into four primary tables:<br />
+                    • Coils (00001-09999): Single-bit read-write values<br />
+                    • Discrete Inputs (10001-19999): Single-bit read-only values<br />
+                    • Input Registers (30001-39999): 16-bit read-only values<br />
+                    • Holding Registers (40001-49999): 16-bit read-write values
+                </Typography>
+
+                <Typography variant="subtitle2" color="text.primary" gutterBottom>
+                    Message Structure
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Each Modbus RTU message frame contains:
+                </Typography>
+                <Typography variant="body2" component="div" color="text.secondary" sx={{ mb: 2, pl: 2 }}>
+                    1. Slave Address (1 byte)<br />
+                    2. Function Code (1 byte)<br />
+                    3. Data (variable length)<br />
+                    4. CRC (Cyclic Redundancy Check, 2 bytes)
+                </Typography>
+
+                <Typography variant="subtitle2" color="text.primary" gutterBottom>
+                    Function Codes and Their Messages
+                </Typography>
+                <Typography variant="body2" component="div" color="text.secondary" sx={{ pl: 2 }}>
+                    <strong>Read Coils (01) and Discrete Inputs (02):</strong><br />
+                    Request: [Slave ID] [FC] [Start Address HIGH] [Start Address LOW] [Quantity HIGH] [Quantity LOW] [CRC]<br />
+                    Response: [Slave ID] [FC] [Byte Count] [Coil/Input Status] [CRC]<br /><br />
+
+                    <strong>Read Holding (03) and Input Registers (04):</strong><br />
+                    Request: [Slave ID] [FC] [Start Address HIGH] [Start Address LOW] [Quantity HIGH] [Quantity LOW] [CRC]<br />
+                    Response: [Slave ID] [FC] [Byte Count] [Register Value HIGH] [Register Value LOW] ... [CRC]<br /><br />
+
+                    <strong>Write Single Coil (05):</strong><br />
+                    Request: [Slave ID] [FC] [Address HIGH] [Address LOW] [0xFF00 (ON) or 0x0000 (OFF)] [CRC]<br />
+                    Response: Echo of request<br /><br />
+
+                    <strong>Write Single Register (06):</strong><br />
+                    Request: [Slave ID] [FC] [Address HIGH] [Address LOW] [Value HIGH] [Value LOW] [CRC]<br />
+                    Response: Echo of request<br /><br />
+
+                    <strong>Write Multiple Coils (15):</strong><br />
+                    Request: [Slave ID] [FC] [Start HIGH] [Start LOW] [Quantity HIGH] [Quantity LOW] [Byte Count] [Coil Values] [CRC]<br />
+                    Response: [Slave ID] [FC] [Start HIGH] [Start LOW] [Quantity HIGH] [Quantity LOW] [CRC]<br /><br />
+
+                    <strong>Write Multiple Registers (16):</strong><br />
+                    Request: [Slave ID] [FC] [Start HIGH] [Start LOW] [Quantity HIGH] [Quantity LOW] [Byte Count] [Values] [CRC]<br />
+                    Response: [Slave ID] [FC] [Start HIGH] [Start LOW] [Quantity HIGH] [Quantity LOW] [CRC]
                 </Typography>
             </Paper>
         </Box>
