@@ -50,16 +50,20 @@ const BAUD_RATES = [9600, 19200, 38400, 57600, 115200];
 const LINE_TIMEOUT = 100; // ms to wait before considering data as a new line
 
 // Modbus function codes
-const MODBUS_FUNCTIONS = {
-    '01': 'Read Coils',
-    '02': 'Read Discrete Inputs',
-    '03': 'Read Holding Registers',
-    '04': 'Read Input Registers',
-    '05': 'Write Single Coil',
-    '06': 'Write Single Register',
-    '0F': 'Write Multiple Coils',
-    '10': 'Write Multiple Registers'
-};
+const MODBUS_FUNCTIONS_LIST = [
+    { code: '01', name: '01 - Read Coils' },
+    { code: '02', name: '02 - Read Discrete Inputs' },
+    { code: '03', name: '03 - Read Holding Registers' },
+    { code: '04', name: '04 - Read Input Registers' },
+    { code: '05', name: '05 - Write Single Coil' },
+    { code: '06', name: '06 - Write Single Register' },
+    { code: '0F', name: '15 - Write Multiple Coils' },
+    { code: '10', name: '16 - Write Multiple Registers' }
+];
+
+const MODBUS_FUNCTIONS = Object.fromEntries(
+    MODBUS_FUNCTIONS_LIST.map(item => [item.code, item.name])
+);
 
 const MODBUS_EXCEPTIONS = {
     '01': 'Illegal Function (The function code received in the query is not recognized or allowed by the slave)',
@@ -281,13 +285,16 @@ const ModbusTerminal = () => {
     const writer = useRef(null);
     const analyticsInterval = useRef(null);
     const lastSecondBytes = useRef(0);
-    const terminalRef = useRef(null);
+    const rawTerminalRef = useRef(null);
     const decodedTerminalRef = useRef(null);
     const [lineBuffer, setLineBuffer] = useState('');
     const lineTimeoutRef = useRef(null);
     const isReadingRef = useRef(false);
     const autoRepeatRef = useRef(null);
     const lastUpdateTime = useRef(Date.now());
+
+    // Add state for tracking last request quantities
+    const lastRequestQuantities = useRef({});  
 
     const LINE_ENDINGS = {
         'none': '',
@@ -303,37 +310,57 @@ const ModbusTerminal = () => {
     };
 
     const scrollToBottom = (ref) => {
-        if (ref.current) {
-            ref.current.scrollTop = ref.current.scrollHeight;
+        if (ref?.current && autoScroll) {
+            const scrollElement = ref.current.querySelector('[role="log"]') || ref.current;
+            scrollElement.scrollTop = scrollElement.scrollHeight;
         }
     };
 
     useEffect(() => {
-        scrollToBottom(terminalRef);
-        scrollToBottom(decodedTerminalRef);
-    }, [receivedData]);
+        if (autoScroll) {
+            scrollToBottom(rawTerminalRef);
+            scrollToBottom(decodedTerminalRef);
+        }
+    }, [receivedData, autoScroll]);
 
     const processIncomingData = (text) => {
         // Add to received data with the original text
         setReceivedData(prev => [...prev, {
             timestamp: new Date(),
             data: text,
-            type: text.startsWith('TX:') ? 'tx' : 'rx'
+            type: text.startsWith('TX:') ? 'tx' : 'rx',
+            requestQuantity: text.startsWith('RX:') ? modbusConfig.quantity : undefined,
+            functionCode: modbusConfig.functionCode // Store the function code too
         }]);
     };
 
     const handleSerialData = (value) => {
+        console.log('Last Request Quantities:', lastRequestQuantities.current);
+        const functionCode = parseInt(modbusConfig.functionCode, 16);
+        console.log('Function Code:', functionCode);
+        console.log('Stored Quantity:', lastRequestQuantities.current[functionCode]);
+
         // Convert the received data to hex string
         const hexData = Array.from(value)
             .map(byte => byte.toString(16).padStart(2, '0'))
             .join(' ')
             .toUpperCase();
 
+        // Parse the function code from the response
+        const bytes = hexData.split(' ').map(byte => parseInt(byte, 16));
+        const responseFunctionCode = bytes[1];  // Function code is second byte in response
+
+        console.log('Response function code:', responseFunctionCode);
+        console.log('Last Request Quantities:', lastRequestQuantities.current);
+        console.log('Stored Quantity:', lastRequestQuantities.current[responseFunctionCode]);
+
         // Add to received data with RX prefix
         setReceivedData(prev => [...prev, { 
             timestamp: new Date(), 
             data: `RX: ${hexData}`,
-            type: 'rx'
+            type: 'rx',
+            requestQuantity: lastRequestQuantities.current[responseFunctionCode],
+            functionCode: responseFunctionCode
         }]);
     };
 
@@ -413,6 +440,17 @@ const ModbusTerminal = () => {
         }
 
         try {
+            const functionCode = parseInt(modbusConfig.functionCode, 16);
+            console.log('Sending request with function code:', functionCode);
+            console.log('Storing quantity:', modbusConfig.quantity);
+
+            // Store the quantity being requested for this function code
+            lastRequestQuantities.current = {
+                ...lastRequestQuantities.current,
+                [functionCode]: modbusConfig.quantity
+            };
+            console.log('New lastRequestQuantities:', lastRequestQuantities.current);
+
             const message = createModbusMessage();
             if (!message) {
                 console.error('Failed to create Modbus message');
@@ -432,7 +470,9 @@ const ModbusTerminal = () => {
             setReceivedData(prev => [...prev, { 
                 timestamp: new Date(), 
                 data: `TX: ${txData}`,
-                type: 'tx'
+                type: 'tx',
+                requestQuantity: modbusConfig.quantity,
+                functionCode: parseInt(modbusConfig.functionCode, 16)  // Store as number
             }]);
 
             // Send the data
@@ -583,23 +623,38 @@ const ModbusTerminal = () => {
     }, [modbusConfig.quantity, modbusConfig.functionCode]);
 
     const handleValueChange = (index, value) => {
-        let numValue;
-        if (writeFormat === 'hex') {
-            // Remove '0x' prefix if present and convert hex string to number
-            numValue = parseInt(value.replace(/^0x/, ''), 16);
-        } else {
-            numValue = parseInt(value);
-        }
-
-        // Ensure the value is within valid range (0-65535)
-        if (!isNaN(numValue) && numValue >= 0 && numValue <= 65535) {
+        // Handle boolean values for coils (both single and multiple)
+        if (['05', '0F'].includes(modbusConfig.functionCode)) {
             setModbusConfig(prev => ({
                 ...prev,
                 values: {
                     ...prev.values,
-                    [index]: numValue
+                    [index]: value ? 1 : 0
                 }
             }));
+            return;
+        }
+
+        // Handle numeric values for registers
+        let numValue;
+        if (typeof value === 'string') {
+            if (writeFormat === 'hex') {
+                // Remove '0x' prefix if present and convert hex string to number
+                numValue = parseInt(value.replace(/^0x/, ''), 16);
+            } else {
+                numValue = parseInt(value);
+            }
+
+            // Ensure the value is within valid range (0-65535)
+            if (!isNaN(numValue) && numValue >= 0 && numValue <= 65535) {
+                setModbusConfig(prev => ({
+                    ...prev,
+                    values: {
+                        ...prev.values,
+                        [index]: numValue
+                    }
+                }));
+            }
         }
     };
 
@@ -625,21 +680,22 @@ const ModbusTerminal = () => {
 
         let message = [slaveId, functionCode];
 
-        // Add start address (2 bytes)
-        message.push((startAddr >> 8) & 0xFF);
-        message.push(startAddr & 0xFF);
-
         // Handle different function codes
         switch (modbusConfig.functionCode) {
             case '01': // Read Coils
             case '02': // Read Discrete Inputs
             case '03': // Read Holding Registers
             case '04': // Read Input Registers
+                // Add start address (2 bytes)
+                message.push((startAddr >> 8) & 0xFF);
+                message.push(startAddr & 0xFF);
+                // Add quantity (2 bytes)
                 message.push((quantity >> 8) & 0xFF);
                 message.push(quantity & 0xFF);
                 break;
 
             case '05': // Write Single Coil
+                // Add start address (2 bytes)
                 message.push((startAddr >> 8) & 0xFF);
                 message.push(startAddr & 0xFF);
                 message.push(modbusConfig.values[0] ? 0xFF : 0x00);
@@ -648,6 +704,7 @@ const ModbusTerminal = () => {
 
             case '06': // Write Single Register
                 const value = parseInt(modbusConfig.values[0]) || 0;
+                // Add start address (2 bytes)
                 message.push((startAddr >> 8) & 0xFF);
                 message.push(startAddr & 0xFF);
                 message.push((value >> 8) & 0xFF);
@@ -655,8 +712,10 @@ const ModbusTerminal = () => {
                 break;
 
             case '0F': // Write Multiple Coils
+                // Add start address (2 bytes)
                 message.push((startAddr >> 8) & 0xFF);
                 message.push(startAddr & 0xFF);
+                // Add quantity (2 bytes)
                 message.push((quantity >> 8) & 0xFF);
                 message.push(quantity & 0xFF);
                 
@@ -678,10 +737,13 @@ const ModbusTerminal = () => {
                 break;
 
             case '10': // Write Multiple Registers
+                // Add start address (2 bytes)
                 message.push((startAddr >> 8) & 0xFF);
                 message.push(startAddr & 0xFF);
+                // Add quantity (2 bytes)
                 message.push((quantity >> 8) & 0xFF);
                 message.push(quantity & 0xFF);
+                // Add byte count
                 message.push(quantity * 2); // Byte count (2 bytes per register)
                 
                 // Add register values
@@ -705,7 +767,7 @@ const ModbusTerminal = () => {
         return message;
     };
 
-    const decodeModbusResponse = (data) => {
+    const decodeModbusResponse = (data, responseInfo) => {
         if (!data || typeof data !== 'string') return null;
         
         // Remove any TX/RX prefix if present and determine type
@@ -753,48 +815,138 @@ const ModbusTerminal = () => {
             }
 
             // Handle normal response
-            const functionName = MODBUS_FUNCTIONS[functionCode.toString(16).padStart(2, '0')] || 'Unknown Function';
+            const functionHex = functionCode.toString(16).padStart(2, '0').toUpperCase();
+            const functionName = MODBUS_FUNCTIONS[functionHex] || 'Unknown Function';
             let values = [];
+            let startAddress = 0;
+            let requestedQuantity = 0;  // Declare at the top level
             
             // Parse based on function code
             switch (functionCode) {
                 case 0x01: // Read Coils
                 case 0x02: // Read Discrete Inputs
                     const byteCount = bytes[2];
-                    const coilStates = [];
-                    for (let i = 0; i < byteCount; i++) {
-                        const byte = bytes[3 + i];
-                        for (let bit = 0; bit < 8; bit++) {
-                            coilStates.push((byte & (1 << bit)) !== 0);
+                    const states = [];
+                    
+                    if (messageType === 'rx') {
+                        // Use the quantity stored with this specific response
+                        requestedQuantity = responseInfo.requestQuantity;
+                        console.log('Response Info:', responseInfo);
+                        console.log('Requested Quantity:', requestedQuantity);
+                        
+                        // Process bits until we have the requested quantity
+                        let bitsProcessed = 0;
+                        for (let i = 0; i < byteCount && bitsProcessed < requestedQuantity; i++) {
+                            const byte = bytes[3 + i];
+                            // Process bits in this byte
+                            for (let bit = 0; bit < 8 && bitsProcessed < requestedQuantity; bit++) {
+                                states.push((byte & (1 << bit)) !== 0);
+                                bitsProcessed++;
+                            }
                         }
+                        values = states;
+                        console.log('Processed Values:', values);
+                    } else {
+                        // For requests, use the quantity from the message
+                        requestedQuantity = (bytes[4] << 8) | bytes[5];
+                        values = Array(requestedQuantity).fill(false);
                     }
-                    values = coilStates;
-                    break;
-
+                    
+                    startAddress = messageType === 'tx' ? 
+                        ((bytes[2] << 8) | bytes[3]) :    // Get address from request message
+                        parseInt(modbusConfig.startAddress); // Fallback to config if processing response
+                    
+                    return {
+                        slaveId,
+                        functionCode,
+                        functionName,
+                        values,
+                        startAddress,
+                        requestedQuantity,  // Just use the requestedQuantity directly
+                        crcValid: validateCRC(bytes),
+                        rawData: cleanData,
+                        type: messageType,
+                        isException: false
+                    };
                 case 0x03: // Read Holding Registers
                 case 0x04: // Read Input Registers
                     const regByteCount = bytes[2];
                     const regCount = regByteCount / 2;
+                    startAddress = messageType === 'tx' ? 
+                        ((bytes[2] << 8) | bytes[3]) :    // Get address from request message
+                        parseInt(modbusConfig.startAddress); // Fallback to config if processing response
+                    
+                    // Parse register values
                     for (let i = 0; i < regCount; i++) {
                         const high = bytes[3 + i * 2];
                         const low = bytes[4 + i * 2];
-                        values.push((high << 8) | low);
+                        if (isNaN(high) || isNaN(low)) {
+                            values.push(0); // Default to 0 if invalid
+                        } else {
+                            values.push((high << 8) | low);
+                        }
                     }
-                    break;
-
+                    return {
+                        slaveId,
+                        functionCode,
+                        functionName,
+                        values,
+                        startAddress,
+                        quantity: values.length,
+                        crcValid: validateCRC(bytes),
+                        rawData: cleanData,
+                        type: messageType,
+                        isException: false
+                    };
+                case 0x05: // Write Single Coil
+                    // Response echoes the request
+                    startAddress = (bytes[2] << 8) | bytes[3];
+                    values = [(bytes[4] === 0xFF)];
+                    return {
+                        slaveId,
+                        functionCode,
+                        functionName,
+                        values,
+                        startAddress,
+                        crcValid: validateCRC(bytes),
+                        rawData: cleanData,
+                        type: messageType,
+                        isException: false
+                    };
+                case 0x0F: // Write Multiple Coils
+                    // Response contains start address and quantity
+                    startAddress = (bytes[2] << 8) | bytes[3];
+                    const writeQuantity = (bytes[4] << 8) | bytes[5];
+                    values = [`${writeQuantity} coils written`];
+                    return {
+                        slaveId,
+                        functionCode,
+                        functionName,
+                        values,
+                        startAddress,
+                        crcValid: validateCRC(bytes),
+                        rawData: cleanData,
+                        type: messageType,
+                        isException: false
+                    };
                 // Add other function codes as needed
             }
 
-            return {
+            // Store the response data
+            const responseData = {
                 slaveId,
                 functionCode,
                 functionName,
                 values,
+                startAddress,
+                quantity: values.length,
                 crcValid: validateCRC(bytes),
                 rawData: cleanData,
-                type: messageType
+                type: messageType,
+                isException: false
             };
-
+            
+            return responseData;
         } catch (error) {
             console.error('Error decoding Modbus response:', error);
             return null;
@@ -864,6 +1016,43 @@ const ModbusTerminal = () => {
         };
     }, []);
 
+    useEffect(() => {
+        const handleScroll = (event) => {
+            const element = event.target;
+            const isAtBottom = Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight) < 10;
+            setAutoScroll(isAtBottom);
+        };
+
+        const rawTerminal = rawTerminalRef.current?.querySelector('[role="log"]') || rawTerminalRef.current;
+        const decodedTerminal = decodedTerminalRef.current?.querySelector('[role="log"]') || decodedTerminalRef.current;
+
+        if (rawTerminal) {
+            rawTerminal.addEventListener('scroll', handleScroll);
+        }
+        if (decodedTerminal) {
+            decodedTerminal.addEventListener('scroll', handleScroll);
+        }
+
+        return () => {
+            if (rawTerminal) {
+                rawTerminal.removeEventListener('scroll', handleScroll);
+            }
+            if (decodedTerminal) {
+                decodedTerminal.removeEventListener('scroll', handleScroll);
+            }
+        };
+    }, []);
+
+    const formatTimestamp = (timestamp) => {
+        return new Intl.DateTimeFormat('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            fractionalSecondDigits: 3,
+            hour12: false
+        }).format(timestamp);
+    };
+
     return (
         <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h5" gutterBottom>
@@ -875,7 +1064,7 @@ const ModbusTerminal = () => {
                 <Grid item xs={12} md={8}>
                     {/* Raw Data Terminal */}
                     <Paper
-                        ref={terminalRef}
+                        ref={rawTerminalRef}
                         variant="outlined"
                         sx={{
                             height: '40vh',
@@ -895,32 +1084,61 @@ const ModbusTerminal = () => {
                             <Typography variant="subtitle2" sx={{ color: 'white' }}>
                                 Raw Data
                             </Typography>
-                            <Button
-                                startIcon={<DeleteIcon />}
-                                onClick={() => setReceivedData([])}
-                                size="small"
-                                sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' } }}
-                            >
-                                Clear
-                            </Button>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            size="small"
+                                            checked={autoScroll}
+                                            onChange={(e) => setAutoScroll(e.target.checked)}
+                                            sx={{ color: 'white' }}
+                                        />
+                                    }
+                                    label="Auto-scroll"
+                                    sx={{ color: 'white', mr: 1 }}
+                                />
+                                <Button
+                                    startIcon={<DeleteIcon />}
+                                    onClick={() => setReceivedData([])}
+                                    size="small"
+                                    sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)' } }}
+                                >
+                                    Clear
+                                </Button>
+                            </Box>
                         </Box>
-                        <Box sx={{ 
-                            p: 1,
-                            flexGrow: 1,
-                            overflow: 'auto',
-                            fontFamily: 'monospace',
-                            fontSize: '0.9rem'
-                        }}>
+                        <Box 
+                            role="log"
+                            sx={{ 
+                                p: 1,
+                                flexGrow: 1,
+                                overflow: 'auto',
+                                fontFamily: 'monospace',
+                                fontSize: '0.9rem'
+                            }}
+                        >
                             {receivedData.map((item, index) => (
                                 <Box 
                                     key={index} 
                                     sx={{ 
                                         display: 'flex',
-                                        alignItems: 'center',
+                                        alignItems: 'flex-start',
                                         mb: 0.5,
                                         color: item.type === 'tx' ? '#4CAF50' : '#2196F3'
                                     }}
                                 >
+                                    <Typography 
+                                        component="span"
+                                        sx={{ 
+                                            color: 'rgba(255, 255, 255, 0.5)',
+                                            mr: 1,
+                                            fontSize: '0.85rem',
+                                            fontFamily: 'monospace',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        {formatTimestamp(item.timestamp)}
+                                    </Typography>
                                     <Typography 
                                         component="div" 
                                         sx={{ 
@@ -960,20 +1178,23 @@ const ModbusTerminal = () => {
                                 Decoded Modbus Data
                             </Typography>
                         </Box>
-                        <Box sx={{ 
-                            p: 1,
-                            flexGrow: 1,
-                            overflow: 'auto',
-                            fontFamily: 'monospace',
-                            fontSize: '0.9rem'
-                        }}>
+                        <Box 
+                            role="log"
+                            sx={{ 
+                                p: 1,
+                                flexGrow: 1,
+                                overflow: 'auto',
+                                fontFamily: 'monospace',
+                                fontSize: '0.9rem'
+                            }}
+                        >
                             {receivedData.map((item, index) => {
                                 // Only try to decode if it's an RX message
                                 if (item.type !== 'rx') return null;
 
                                 // Remove the RX prefix for decoding
                                 const cleanData = item.data.replace(/^RX:\s*/, '');
-                                const decoded = decodeModbusResponse(cleanData);
+                                const decoded = decodeModbusResponse(cleanData, item);
                                 if (!decoded) return null;
 
                                 return (
@@ -985,15 +1206,27 @@ const ModbusTerminal = () => {
                                             borderLeft: '2px solid #2196F3'
                                         }}
                                     >
-                                        <Typography 
-                                            variant="body2" 
-                                            sx={{ 
-                                                color: '#2196F3',
-                                                mb: 1
-                                            }}
-                                        >
-                                            Response #{index + 1}
-                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                            <Typography 
+                                                variant="body2" 
+                                                sx={{ 
+                                                    color: '#2196F3',
+                                                }}
+                                            >
+                                                Response #{index + 1}
+                                            </Typography>
+                                            <Typography 
+                                                variant="body2" 
+                                                sx={{ 
+                                                    color: 'rgba(255, 255, 255, 0.5)',
+                                                    ml: 2,
+                                                    fontSize: '0.85rem',
+                                                    fontFamily: 'monospace'
+                                                }}
+                                            >
+                                                {formatTimestamp(item.timestamp)}
+                                            </Typography>
+                                        </Box>
                                         <Typography 
                                             variant="body2" 
                                             sx={{ 
@@ -1019,31 +1252,20 @@ const ModbusTerminal = () => {
                                                     Values:
                                                 </Typography>
                                                 <Box sx={{ ml: 2 }}>
-                                                    {decoded.isException ? (
+                                                    {!decoded.isException && decoded.values.slice(0, decoded.requestedQuantity).map((value, i) => (
                                                         <Typography 
+                                                            key={i}
                                                             variant="body2" 
-                                                            sx={{ 
-                                                                color: '#f44336',
-                                                                '& > div': { mb: 0.5 }
-                                                            }}
+                                                            sx={{ color: 'text.secondary', mb: 0.5 }}
                                                         >
-                                                            <div>Exception Code: {decoded.values[0].code} (0x{decoded.values[0].hex})</div>
-                                                            <div>{decoded.values[0].description}</div>
+                                                            {decoded.functionCode === 0x01 ? 
+                                                                `Coil ${decoded.startAddress + i}: ${value ? 'ON' : 'OFF'}` :
+                                                            decoded.functionCode === 0x02 ?
+                                                                `Discrete Input ${decoded.startAddress + i}: ${value ? 'ON' : 'OFF'}` :
+                                                                `Register ${decoded.startAddress + i}: ${value} (0x${value.toString(16).padStart(4, '0')})`
+                                                            }
                                                         </Typography>
-                                                    ) : (
-                                                        decoded.values.map((value, i) => (
-                                                            <Typography 
-                                                                key={i} 
-                                                                variant="body2" 
-                                                                sx={{ color: 'text.secondary', mb: 0.5 }}
-                                                            >
-                                                                {decoded.functionCode === 0x01 || decoded.functionCode === 0x02 ? 
-                                                                    `Coil ${decoded.startAddress + i}: ${value ? 'ON' : 'OFF'}` :
-                                                                    `Register ${decoded.startAddress + i}: ${value} (0x${value.toString(16).padStart(4, '0')})`
-                                                                }
-                                                            </Typography>
-                                                        ))
-                                                    )}
+                                                    ))}
                                                 </Box>
                                             </Box>
                                         )}
@@ -1150,10 +1372,14 @@ const ModbusTerminal = () => {
                                     label="Function"
                                     onChange={(e) => setModbusConfig(prev => ({
                                         ...prev,
-                                        functionCode: e.target.value
+                                        functionCode: e.target.value,
+                                        // Force quantity to 1 for Write Single Coil and Write Single Register
+                                        quantity: (e.target.value === '05' || e.target.value === '06') ? 1 : prev.quantity,
+                                        // Reset values when changing function
+                                        values: []
                                     }))}
                                 >
-                                    {Object.entries(MODBUS_FUNCTIONS).map(([code, name]) => (
+                                    {MODBUS_FUNCTIONS_LIST.map(({code, name}) => (
                                         <MenuItem key={code} value={code}>
                                             {name}
                                         </MenuItem>
@@ -1184,17 +1410,16 @@ const ModbusTerminal = () => {
                                 type="number"
                                 label="Quantity"
                                 value={modbusConfig.quantity}
-                                onChange={(e) => {
-                                    const val = parseInt(e.target.value);
-                                    if (val >= 1 && val <= 12) {
-                                        setModbusConfig(prev => ({
-                                            ...prev,
-                                            quantity: val
-                                        }));
-                                    }
+                                onChange={(e) => setModbusConfig(prev => ({
+                                    ...prev,
+                                    quantity: parseInt(e.target.value) || 1
+                                }))}
+                                // Disable for Write Single Coil and Write Single Register
+                                disabled={modbusConfig.functionCode === '05' || modbusConfig.functionCode === '06'}
+                                inputProps={{
+                                    min: 1,
+                                    max: 125
                                 }}
-                                inputProps={{ min: 1, max: 21 }}
-                                sx={{ mb: 2 }}
                             />
                         </Box>
 
@@ -1202,42 +1427,69 @@ const ModbusTerminal = () => {
                             <Box sx={{ mb: 2 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                                     <Typography variant="subtitle2">Write Values</Typography>
-                                    <ToggleButtonGroup
-                                        size="small"
-                                        value={writeFormat}
-                                        exclusive
-                                        onChange={(e, newFormat) => {
-                                            if (newFormat !== null) {
-                                                setWriteFormat(newFormat);
-                                            }
-                                        }}
-                                    >
-                                        <ToggleButton value="hex">HEX</ToggleButton>
-                                        <ToggleButton value="dec">DEC</ToggleButton>
-                                    </ToggleButtonGroup>
+                                    {!['05', '0F'].includes(modbusConfig.functionCode) && (
+                                        <ToggleButtonGroup
+                                            size="small"
+                                            value={writeFormat}
+                                            exclusive
+                                            onChange={(e, newFormat) => {
+                                                if (newFormat !== null) {
+                                                    setWriteFormat(newFormat);
+                                                }
+                                            }}
+                                        >
+                                            <ToggleButton value="hex">HEX</ToggleButton>
+                                            <ToggleButton value="dec">DEC</ToggleButton>
+                                        </ToggleButtonGroup>
+                                    )}
                                 </Box>
-                                <Grid container spacing={2}>
-                                    {Array.from({ length: Math.min(modbusConfig.quantity, 21) }).map((_, i) => (
-                                        <Grid item xs={4} key={i}>
+                                <Grid container spacing={1}>
+                                    {Array.from({ length: Math.min(modbusConfig.quantity, ['05', '0F'].includes(modbusConfig.functionCode) ? 12 : 21) }).map((_, i) => (
+                                        <Grid item xs={['05', '0F'].includes(modbusConfig.functionCode) ? 6 : 4} key={i}>
                                             <Box>
-                                                <Typography variant="caption" sx={{ mb: 0.5, display: 'block' }}>
-                                                    Register {modbusConfig.startAddress + i}
-                                                </Typography>
-                                                <TextField
-                                                    size="small"
-                                                    value={formatWriteValue(modbusConfig.values[i])}
-                                                    onChange={(e) => handleValueChange(i, e.target.value)}
-                                                    inputProps={{
-                                                        style: { fontFamily: 'monospace' }
-                                                    }}
-                                                />
+                                                {['05', '0F'].includes(modbusConfig.functionCode) ? (
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Switch
+                                                                size="small"
+                                                                checked={!!modbusConfig.values[i]}
+                                                                onChange={(e) => handleValueChange(i, e.target.checked)}
+                                                            />
+                                                        }
+                                                        label={
+                                                            <Typography variant="caption">
+                                                                {`Coil ${modbusConfig.startAddress + i}: ${modbusConfig.values[i] ? "ON" : "OFF"}`}
+                                                            </Typography>
+                                                        }
+                                                        sx={{ 
+                                                            m: 0,
+                                                            '& .MuiFormControlLabel-label': {
+                                                                fontSize: '0.75rem',
+                                                                minWidth: '80px'
+                                                            }
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <>
+                                                        <Typography variant="caption" sx={{ mb: 0.5, display: 'block' }}>
+                                                            {`Register ${modbusConfig.startAddress + i}`}
+                                                        </Typography>
+                                                        <TextField
+                                                            size="small"
+                                                            value={formatWriteValue(modbusConfig.values[i])}
+                                                            onChange={(e) => handleValueChange(i, e.target.value)}
+                                                            inputProps={{
+                                                                style: { fontFamily: 'monospace' }
+                                                            }}
+                                                        />
+                                                    </>
+                                                )}
                                             </Box>
                                         </Grid>
                                     ))}
                                 </Grid>
                             </Box>
                         )}
-
                         <Box sx={{ mb: 2 }}>
                             <Button
                                 variant="contained"
