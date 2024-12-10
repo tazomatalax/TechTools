@@ -40,7 +40,7 @@ import { useTheme } from '@mui/material/styles';
 import AboutToolSection from '../../components/AboutToolSection';
 
 const BAUD_RATES = [300, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600, 1000000, 1500000, 2000000];
-const LINE_TIMEOUT = 100; // ms to wait before considering data as a new line
+const LINE_TIMEOUT = 50; // ms to wait before considering data as a new line
 
 const HIGHLIGHT_COLORS = [
     '#ffcdd2', '#f8bbd0', '#e1bee7', '#d1c4e9', '#c5cae9', 
@@ -62,34 +62,6 @@ const getContrastTextColor = (bgColor) => {
     return luminance > 0.5 ? '#000000' : '#ffffff';
 };
 
-const formatData = (data, format) => {
-    if (!data) return '';
-    
-    // For ASCII mode, return the raw string
-    if (format === 'ascii') {
-        return data;
-    }
-
-    // For other formats, convert string to bytes and then format
-    const bytes = new TextEncoder().encode(data);
-    switch (format) {
-        case 'hex':
-            return Array.from(bytes)
-                .map(b => b.toString(16).padStart(2, '0').toUpperCase())
-                .join(' ');
-        case 'decimal':
-            return Array.from(bytes)
-                .map(b => b.toString(10).padStart(3, ' '))
-                .join(' ');
-        case 'binary':
-            return Array.from(bytes)
-                .map(b => b.toString(2).padStart(8, '0'))
-                .join(' ');
-        default:
-            return data;
-    }
-};
-
 const parseHighlightPattern = (pattern, type) => {
     try {
         switch (type) {
@@ -108,6 +80,7 @@ const parseHighlightPattern = (pattern, type) => {
                 return numbers.map(n => parseInt(n).toString(16).padStart(2, '0')).join('');
             }
             case 'text':
+                return pattern;
             default:
                 return new TextEncoder().encode(pattern)
                     .reduce((hex, byte) => hex + byte.toString(16).padStart(2, '0'), '');
@@ -119,7 +92,7 @@ const parseHighlightPattern = (pattern, type) => {
 
 const applyHighlights = (data, format, highlights) => {
     if (!highlights.length) {
-        return formatData(data, format);
+        return data;
     }
 
     // Convert data to hex for matching
@@ -127,7 +100,7 @@ const applyHighlights = (data, format, highlights) => {
     try {
         hexData = parseHighlightPattern(data, 'text');  // Always convert from text for matching
     } catch {
-        return formatData(data, format); // Return formatted data if conversion fails
+        return data;
     }
 
     // Find all matches for all patterns
@@ -157,8 +130,7 @@ const applyHighlights = (data, format, highlights) => {
     matches.sort((a, b) => a.start - b.start);
 
     // Convert data to array for highlighting
-    const formattedData = formatData(data, format);
-    const chars = Array.from(formattedData);
+    const chars = Array.from(data);
     let result = [];
     let pos = 0;
 
@@ -212,6 +184,7 @@ const SerialTerminal = () => {
     const [isConnected, setIsConnected] = useState(false);
     const [baudRate, setBaudRate] = useState(115200);
     const [displayFormat, setDisplayFormat] = useState('ascii');
+    const [dataBuffer, setDataBuffer] = useState(new Uint8Array());
     const [receivedData, setReceivedData] = useState([]);
     const [sendFormat, setSendFormat] = useState('ascii');
     const [sendData, setSendData] = useState('');
@@ -246,7 +219,7 @@ const SerialTerminal = () => {
     const analyticsInterval = useRef(null);
     const lastSecondBytes = useRef(0);
     const terminalRef = useRef(null);
-    const [lineBuffer, setLineBuffer] = useState('');
+    const lastDataTime = useRef(Date.now());
     const lineTimeoutRef = useRef(null);
     const isReadingRef = useRef(false);
     const autoRepeatRef = useRef(null);
@@ -279,87 +252,192 @@ const SerialTerminal = () => {
 
     const processIncomingData = (value) => {
         const now = Date.now();
-        let newBytes;
-        let text;
         
-        // If value is already a Uint8Array, decode it to text
-        if (value instanceof Uint8Array) {
-            newBytes = value;
-            text = new TextDecoder().decode(value);
-        } else {
-            // For text data
-            text = value;
-            newBytes = new TextEncoder().encode(value);
-        }
+        // Debug raw incoming data
+        const decoder = new TextDecoder();
+        const rawData = decoder.decode(value);
         
         // Update analytics
         setAnalytics(prev => ({
             ...prev,
-            totalBytes: prev.totalBytes + newBytes.length,
+            totalBytes: prev.totalBytes + value.length,
         }));
 
-        // Update the line buffer
-        setLineBuffer(prev => prev + text);
+        // Combine new data with existing buffer
+        const newBuffer = new Uint8Array(dataBuffer.length + value.length);
+        newBuffer.set(dataBuffer);
+        newBuffer.set(value, dataBuffer.length);
+        
+        // Convert entire buffer to string
+        const fullText = decoder.decode(newBuffer);
 
+        // Process the data immediately if it contains a complete line
+        if (fullText.includes('\n') || fullText.includes('\r')) {
+            // Split on any type of newline while preserving empty lines
+            const lines = fullText.split(/(\r\n|\n\r|\n|\r)/);
+            
+            // Process all complete lines
+            const completeLines = [];
+            for (let i = 0; i < lines.length - 1; i += 2) {
+                const line = lines[i];
+                const lineEnding = i + 1 < lines.length ? lines[i + 1] : '';
+                if (line || lineEnding) {
+                    completeLines.push(line + lineEnding);
+                }
+            }
+            
+            if (completeLines.length > 0) {
+                setReceivedData(oldData => [
+                    ...oldData,
+                    ...completeLines.map(line => ({
+                        timestamp: new Date().toLocaleString(),
+                        data: new TextEncoder().encode(line),
+                        type: 'incoming'
+                    }))
+                ].slice(-5000));
+            }
+            
+            // Store any remaining incomplete data in the buffer
+            const lastLine = lines[lines.length - 1];
+            if (lastLine) {
+                setDataBuffer(new TextEncoder().encode(lastLine));
+            } else {
+                setDataBuffer(new Uint8Array());
+            }
+        } else {
+            // No newline found, add to buffer
+            setDataBuffer(newBuffer);
+        }
+        
         // Clear any existing timeout
         if (lineTimeoutRef.current) {
             clearTimeout(lineTimeoutRef.current);
         }
-
-        // Set a new timeout to flush the buffer
-        lineTimeoutRef.current = setTimeout(() => {
-            setLineBuffer(prev => {
-                if (prev) {
-                    setReceivedData(oldData => [
-                        ...oldData,
-                        {
-                            timestamp: new Date().toLocaleString(),
-                            data: prev,
-                            type: 'incoming'
-                        }
-                    ].slice(-5000)); // Keep last 5000 lines
-                    return '';
-                }
-                return prev;
-            });
-        }, LINE_TIMEOUT);
+        
+        // Set timeout to process buffer if no more data comes
+        if (dataBuffer.length > 0) {
+            lineTimeoutRef.current = setTimeout(() => {
+                setReceivedData(oldData => [
+                    ...oldData,
+                    {
+                        timestamp: new Date().toLocaleString(),
+                        data: dataBuffer,
+                        type: 'incoming'
+                    }
+                ].slice(-5000));
+                setDataBuffer(new Uint8Array());
+            }, LINE_TIMEOUT);
+        }
+        
+        lastDataTime.current = now;
     };
 
-    const handleSerialData = async (reader) => {
-        try {
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) {
-                    reader.releaseLock();
-                    break;
-                }
-                if (value) {
-                    processIncomingData(value);
-                }
+    const renderData = (item) => {
+        if (!item || !item.data) return '';
+        
+        // Ensure we're working with Uint8Array
+        const bytes = item.data instanceof Uint8Array ? 
+            item.data : 
+            new Uint8Array(item.data);
+            
+        switch (displayFormat) {
+            case 'ascii': {
+                const decoder = new TextDecoder();
+                const text = decoder.decode(bytes);
+                return text;
             }
-        } catch (error) {
-            console.error('Error reading serial data:', error);
-            setError('Error reading serial data: ' + error.message);
-            setIsConnected(false);
+            case 'hex':
+                return Array.from(bytes)
+                    .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+                    .join(' ');
+            case 'decimal':
+                return Array.from(bytes)
+                    .map(b => b.toString(10).padStart(3, '0'))
+                    .join(' ');
+            case 'binary':
+                return Array.from(bytes)
+                    .map(b => b.toString(2).padStart(8, '0'))
+                    .join(' ');
+            default: {
+                const decoder = new TextDecoder();
+                return decoder.decode(bytes);
+            }
         }
     };
 
-    const startReading = async () => {
-        while (isReadingRef.current) {
+    const disconnect = async () => {
+        isReadingRef.current = false;
+        try {
+            if (reader.current) {
+                await reader.current.cancel();
+                reader.current.releaseLock();
+                reader.current = null;
+            }
+            if (writer.current) {
+                await writer.current.close();
+                writer.current.releaseLock();
+                writer.current = null;
+            }
+            if (port) {
+                await port.close();
+            }
+            setIsConnected(false);
+        } catch (err) {
+            console.error('Error disconnecting:', err);
+            setError(err.message);
+        }
+    };
+
+    const readLoop = async () => {
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        while (true) {
             try {
+                if (!reader.current) break;
+                
                 const { value, done } = await reader.current.read();
-                if (done) break;
-                
-                const timestamp = new Date().toLocaleString();
-                const text = new TextDecoder().decode(value);
-                
-                processIncomingData(text);
-            } catch (err) {
-                if (isReadingRef.current) {
-                    console.error('Error reading data:', err);
+                if (done) {
+                    reader.current.releaseLock();
+                    break;
                 }
+                
+                if (value) {
+                    // Decode the new data and add to buffer
+                    buffer += decoder.decode(value, { stream: true });
+                    
+                    // Split on newlines, keeping the last partial line in the buffer
+                    const lines = buffer.split(/\r\n|\n|\r/);
+                    buffer = lines.pop() || ''; // Keep the last partial line in buffer
+                    
+                    // Add complete lines to display
+                    if (lines.length > 0) {
+                        setReceivedData(oldData => [
+                            ...oldData,
+                            ...lines.map(line => ({
+                                timestamp: new Date().toLocaleString(),
+                                data: new TextEncoder().encode(line + '\n'),
+                                type: 'incoming'
+                            }))
+                        ].slice(-5000));
+                    }
+                }
+            } catch (error) {
+                console.error('Error in read loop:', error);
                 break;
             }
+        }
+        
+        // Handle any remaining data in buffer
+        if (buffer) {
+            setReceivedData(oldData => [
+                ...oldData,
+                {
+                    timestamp: new Date().toLocaleString(),
+                    data: new TextEncoder().encode(buffer),
+                    type: 'incoming'
+                }
+            ].slice(-5000));
         }
     };
 
@@ -380,7 +458,7 @@ const SerialTerminal = () => {
 
     const clearData = () => {
         clearTimeout(lineTimeoutRef.current);
-        setLineBuffer('');
+        setDataBuffer(new Uint8Array());
         setReceivedData([]);
         setAnalytics({
             totalBytes: 0,
@@ -404,71 +482,6 @@ const SerialTerminal = () => {
         return portInfo.usbVendorId ? 
             `Serial Device (VID:${portInfo.usbVendorId.toString(16).padStart(4, '0')} PID:${portInfo.usbProductId.toString(16).padStart(4, '0')})` : 
             'Serial Device';
-    };
-
-    const connectPort = async () => {
-        if (!port) return;
-        
-        try {
-            await port.open({ baudRate });
-            reader.current = port.readable.getReader();
-            writer.current = port.writable.getWriter();
-            isReadingRef.current = true;
-            setIsConnected(true);
-            handleSerialData(reader.current);
-            startAnalytics();
-        } catch (err) {
-            console.error('Error opening port:', err);
-        }
-    };
-
-    const disconnect = async () => {
-        isReadingRef.current = false;  // Stop the reading loop first
-        setIsConnected(false);
-        clearTimeout(lineTimeoutRef.current);
-        
-        try {
-            if (reader.current) {
-                try {
-                    await reader.current.cancel();
-                } catch (error) {
-                    console.log('Reader already cancelled');
-                }
-                try {
-                    reader.current.releaseLock();
-                } catch (error) {
-                    console.log('Reader already released');
-                }
-            }
-            
-            if (writer.current) {
-                try {
-                    await writer.current.close();
-                } catch (error) {
-                    console.log('Writer already closed');
-                }
-                try {
-                    writer.current.releaseLock();
-                } catch (error) {
-                    console.log('Writer already released');
-                }
-            }
-            
-            if (port) {
-                try {
-                    await port.close();
-                } catch (error) {
-                    console.log('Port already closed');
-                }
-            }
-        } catch (err) {
-            console.error('Error during disconnect:', err);
-        }
-
-        // Clear references
-        reader.current = null;
-        writer.current = null;
-        clearInterval(analyticsInterval.current);
     };
 
     const addToHistory = (text) => {
@@ -631,6 +644,84 @@ const SerialTerminal = () => {
         });
     };
 
+    const startReading = async () => {
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        while (isReadingRef.current) {
+            try {
+                const { value, done } = await reader.current.read();
+                if (done) break;
+                
+                if (value) {
+                    // Process the data immediately
+                    processIncomingData(value);
+                }
+            } catch (error) {
+                if (isReadingRef.current) {
+                    console.error('Error reading serial data:', error);
+                    setError('Error reading serial data: ' + error.message);
+                }
+                break;
+            }
+        }
+    };
+
+    const handleSerialData = async (reader) => {
+        try {
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) {
+                    reader.releaseLock();
+                    break;
+                }
+                if (value) {
+                    processIncomingData(value);
+                }
+            }
+        } catch (error) {
+            console.error('Error reading serial data:', error);
+            setError('Error reading serial data: ' + error.message);
+            setIsConnected(false);
+        }
+    };
+
+    const connectPort = async () => {
+        if (!port) return;
+        
+        try {
+            await port.open({ 
+                baudRate,
+                bufferSize: 4096,
+                dataBits: 8,
+                stopBits: 1,
+                parity: 'none',
+                flowControl: 'none'
+            });
+
+            // Clear any existing reader/writer
+            if (reader.current) {
+                await reader.current.cancel();
+                await reader.current.releaseLock();
+            }
+            if (writer.current) {
+                await writer.current.releaseLock();
+            }
+
+            reader.current = port.readable.getReader();
+            writer.current = port.writable.getWriter();
+            isReadingRef.current = true;
+            setIsConnected(true);
+            
+            // Start reading loop
+            readLoop();
+            startAnalytics();
+        } catch (err) {
+            console.error('Error opening port:', err);
+            setError('Error opening port: ' + err.message);
+        }
+    };
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -731,9 +822,20 @@ const SerialTerminal = () => {
                                     {item.timestamp ? formatLocalTime(new Date(item.timestamp)) : ''}
                                 </span>
                                 {' '}
-                                <span style={{ color: item.type === 'outgoing' ? '#87CEEB' : 'lightgreen' }}>
-                                    {applyHighlights(item.data || '', displayFormat, highlights)}
-                                </span>
+                                <Typography
+                                    component="span"
+                                    sx={{
+                                        color: item.type === 'outgoing' ? 'success.main' : 'info.main'
+                                    }}
+                                >
+                                    {applyHighlights(
+                                        item.type === 'incoming' 
+                                            ? renderData(item)
+                                            : item.data,
+                                        displayFormat,
+                                        highlights
+                                    )}
+                                </Typography>
                             </Box>
                         ))}
                     </Paper>
