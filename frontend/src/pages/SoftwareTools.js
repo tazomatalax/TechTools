@@ -21,6 +21,7 @@ import {
   Palette as ColorIcon,
   Image as ImageIcon,
   Code as CodeBracesIcon,
+  DataObject as DataObjectIcon,
 } from '@mui/icons-material';
 import BaseConverter from '../tools/software/BaseConverter';
 import CrcCalculator from '../tools/software/CrcCalculator';
@@ -33,6 +34,8 @@ import JsonFormatter from '../tools/software/JsonFormatter';
 import BinaryViewer from '../tools/software/BinaryViewer';
 import ColorPicker from '../tools/software/ColorPicker';
 import ImageConverter from '../tools/software/ImageConverter';
+import AsciiTable from '../tools/software/AsciiTable';
+import TerminalControls from '../tools/software/TerminalControls';
 
 const ToolCard = styled(Card)(({ theme }) => ({
   height: '100%',
@@ -111,6 +114,20 @@ const SoftwareTools = () => {
           path: "json-formatter",
           component: JsonFormatter,
           icon: <JsonIcon />,
+        },
+        {
+          title: "ASCII Table",
+          description: "Interactive ASCII reference table with hex, binary, and character conversion tools",
+          path: "ascii-table",
+          component: AsciiTable,
+          icon: <DataObjectIcon />,
+        },
+        {
+          title: "Terminal Controls",
+          description: "Interactive reference for ANSI terminal control sequences with live preview",
+          path: "terminal-controls",
+          component: TerminalControls,
+          icon: <TerminalIcon />,
         },
       ],
     },
