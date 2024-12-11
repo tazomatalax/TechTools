@@ -95,34 +95,27 @@ const applyHighlights = (data, format, highlights) => {
         return data;
     }
 
-    // Convert data to hex for matching
-    let hexData;
-    try {
-        hexData = parseHighlightPattern(data, 'text');  // Always convert from text for matching
-    } catch {
-        return data;
-    }
-
     // Find all matches for all patterns
     const matches = [];
     highlights.forEach(highlight => {
-        let pattern = highlight.hexPattern;
-        let searchIn = hexData;
+        let pattern = highlight.pattern;
+        let searchIn = data;
+        
         if (!highlight.caseSensitive) {
             pattern = pattern.toLowerCase();
-            searchIn = hexData.toLowerCase();
+            searchIn = data.toLowerCase();
         }
 
         let index = 0;
         while ((index = searchIn.indexOf(pattern, index)) !== -1) {
             matches.push({
-                start: index / 2,
-                end: (index + pattern.length) / 2,
+                start: index,
+                end: index + pattern.length,
                 color: highlight.color,
                 pattern: highlight.pattern,
                 name: highlight.name
             });
-            index += 2;
+            index += 1;
         }
     });
 
@@ -134,39 +127,21 @@ const applyHighlights = (data, format, highlights) => {
     let result = [];
     let pos = 0;
 
-    // Adjust positions based on format
-    const getAdjustedPosition = (rawPos) => {
-        switch (format) {
-            case 'hex':
-                return rawPos * 3;  // Each byte becomes 2 hex chars + 1 space
-            case 'decimal':
-                return rawPos * 4;  // Each byte becomes 3 decimal chars + 1 space
-            case 'binary':
-                return rawPos * 9;  // Each byte becomes 8 binary chars + 1 space
-            case 'ascii':
-            default:
-                return rawPos;
-        }
-    };
-
     matches.forEach(match => {
-        const startPos = getAdjustedPosition(match.start);
-        const endPos = getAdjustedPosition(match.end);
-        
-        if (startPos > pos) {
-            result.push(<span key={`text-${pos}`}>{chars.slice(pos, startPos).join('')}</span>);
+        if (match.start > pos) {
+            result.push(<span key={`text-${pos}`}>{chars.slice(pos, match.start).join('')}</span>);
         }
         result.push(
-            <Tooltip key={`highlight-${startPos}`} title={`${match.name}: ${match.pattern}`}>
+            <Tooltip key={`highlight-${match.start}`} title={`${match.name}: ${match.pattern}`}>
                 <span style={{ 
                     backgroundColor: match.color,
                     color: getContrastTextColor(match.color)
                 }}>
-                    {chars.slice(startPos, endPos).join('')}
+                    {chars.slice(match.start, match.end).join('')}
                 </span>
             </Tooltip>
         );
-        pos = endPos;
+        pos = match.end;
     });
 
     if (pos < chars.length) {
@@ -199,9 +174,6 @@ const SerialTerminal = () => {
     ]);
     const [showPresetDialog, setShowPresetDialog] = useState(false);
     const [newPreset, setNewPreset] = useState({ name: '', command: '' });
-    const [analytics, setAnalytics] = useState({
-        totalBytes: 0,
-    });
     const [highlights, setHighlights] = useState([]);
     const [showHighlightDialog, setShowHighlightDialog] = useState(false);
     const [newHighlight, setNewHighlight] = useState({
@@ -216,8 +188,6 @@ const SerialTerminal = () => {
 
     const reader = useRef(null);
     const writer = useRef(null);
-    const analyticsInterval = useRef(null);
-    const lastSecondBytes = useRef(0);
     const terminalRef = useRef(null);
     const lastDataTime = useRef(Date.now());
     const lineTimeoutRef = useRef(null);
@@ -257,12 +227,6 @@ const SerialTerminal = () => {
         const decoder = new TextDecoder();
         const rawData = decoder.decode(value);
         
-        // Update analytics
-        setAnalytics(prev => ({
-            ...prev,
-            totalBytes: prev.totalBytes + value.length,
-        }));
-
         // Combine new data with existing buffer
         const newBuffer = new Uint8Array(dataBuffer.length + value.length);
         newBuffer.set(dataBuffer);
@@ -441,28 +405,10 @@ const SerialTerminal = () => {
         }
     };
 
-    const updateAnalytics = (byteCount) => {
-        setAnalytics(prev => ({
-            ...prev,
-            totalBytes: prev.totalBytes + byteCount,
-        }));
-    };
-
-    const startAnalytics = () => {
-        analyticsInterval.current = setInterval(() => {
-            setAnalytics(prev => ({
-                ...prev,
-            }));
-        }, 1000);
-    };
-
     const clearData = () => {
         clearTimeout(lineTimeoutRef.current);
         setDataBuffer(new Uint8Array());
         setReceivedData([]);
-        setAnalytics({
-            totalBytes: 0,
-        });
     };
 
     const requestPort = async () => {
@@ -715,7 +661,6 @@ const SerialTerminal = () => {
             
             // Start reading loop
             readLoop();
-            startAnalytics();
         } catch (err) {
             console.error('Error opening port:', err);
             setError('Error opening port: ' + err.message);
@@ -771,10 +716,6 @@ const SerialTerminal = () => {
                 </Tooltip>
 
                 <Box sx={{ flexGrow: 1 }} />
-
-                <Typography variant="body2" color="text.secondary">
-                    Bytes: {analytics.totalBytes}
-                </Typography>
 
                 <Button
                     startIcon={<DeleteIcon />}
@@ -1079,7 +1020,7 @@ const SerialTerminal = () => {
                       'Pattern matching with text/hex/decimal support',
                       'Case-sensitive or case-insensitive highlighting',
                       'Auto-scroll control',
-                      'Data statistics tracking'
+                      'Clear terminal functionality'
                     ]
                   }
                 ]}
