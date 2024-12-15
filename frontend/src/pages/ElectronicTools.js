@@ -38,6 +38,7 @@ import PcbTraceCalculator from '../tools/electronic/PcbTraceCalculator';
 import BatteryLifeCalculator from '../tools/electronic/BatteryLifeCalculator';
 import VoltageRegulatorCalculator from '../tools/electronic/VoltageRegulatorCalculator';
 import AdcCalculator from '../tools/electronic/AdcCalculator';
+import PwmDacCalculator from '../tools/electronic/PwmDacCalculator';
 
 const ToolCard = styled(Card)(({ theme }) => ({
   height: '100%',
@@ -134,6 +135,13 @@ const ElectronicTools = () => {
           description: "Design voltage dividers for ADC inputs and analyze measurement ranges",
           path: "adc-calculator",
           component: AdcCalculator,
+          icon: <AdcIcon />,
+        },
+        {
+          title: "PWM DAC Calculator",
+          description: "Calculate RC filter components for PWM Digital-to-Analog conversion",
+          path: "pwm-dac-calculator",
+          component: PwmDacCalculator,
           icon: <AdcIcon />,
         },
       ],

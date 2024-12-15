@@ -279,7 +279,7 @@ const VoltageRegulatorCalculator = () => {
                   )}
                   {results.powerDissipation > 1 && (
                     <Typography paragraph>
-                      • Heat sink recommended for power dissipation > 1W
+                      • Heat sink recommended for power dissipation gretaer than 1W
                     </Typography>
                   )}
                   <Typography>
@@ -290,6 +290,90 @@ const VoltageRegulatorCalculator = () => {
             </Grid>
           </Box>
         )}
+      </Paper>
+
+      <Paper elevation={3} sx={{ p: 4, mt: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          About this Tool
+        </Typography>
+        
+        <Typography variant="body1" paragraph>
+          The Voltage Regulator Calculator helps design power supply circuits using linear voltage regulators. It calculates key parameters like power dissipation, efficiency, and component requirements while ensuring safe operating conditions.
+        </Typography>
+
+        <Typography variant="subtitle1" sx={{ mt: 2 }} gutterBottom>
+          Key Parameters
+        </Typography>
+        <Typography component="div" variant="body2">
+          <ul>
+            <li><strong>Dropout Voltage</strong>
+              <br />• Minimum voltage difference required between input and output
+              <br />• Varies by regulator type (LDO vs standard)
+              <br />• Critical for efficiency and heat management
+            </li>
+            <li><strong>Power Dissipation</strong>
+              <br />• P = (Vin - Vout) × Load Current
+              <br />• Determines heatsink requirements
+              <br />• Key factor in regulator selection
+            </li>
+            <li><strong>Efficiency</strong>
+              <br />• η = (Vout × Iout) / (Vin × Iin) × 100%
+              <br />• Higher with smaller input-output differential
+              <br />• Trade-off between regulation and efficiency
+            </li>
+          </ul>
+        </Typography>
+
+        <Typography variant="subtitle1" sx={{ mt: 2 }} gutterBottom>
+          Design Considerations
+        </Typography>
+        <Typography component="div" variant="body2">
+          <ul>
+            <li><strong>Thermal Management</strong>
+              <br />• Maximum junction temperature
+              <br />• Thermal resistance calculations
+              <br />• Heatsink selection criteria
+            </li>
+            <li><strong>Input/Output Capacitors</strong>
+              <br />• Required for stability
+              <br />• ESR requirements
+              <br />• Placement guidelines
+            </li>
+            <li><strong>Protection Features</strong>
+              <br />• Overcurrent protection
+              <br />• Thermal shutdown
+              <br />• Reverse polarity protection
+            </li>
+          </ul>
+        </Typography>
+
+        <Typography variant="subtitle1" sx={{ mt: 2 }} gutterBottom>
+          Common Applications
+        </Typography>
+        <Typography component="div" variant="body2">
+          <ul>
+            <li>Converting higher voltage supplies to logic levels (e.g., 12V to 5V/3.3V)</li>
+            <li>Battery-powered devices with stable voltage requirements</li>
+            <li>Sensitive analog circuits requiring clean power</li>
+            <li>Point-of-load regulation in distributed power systems</li>
+          </ul>
+        </Typography>
+
+        <Typography variant="subtitle1" sx={{ mt: 2 }} gutterBottom>
+          Usage Tips
+        </Typography>
+        <Typography component="div" variant="body2">
+          <ul>
+            <li>Always include margin in input voltage for dropout requirements</li>
+            <li>Consider thermal design early in the project</li>
+            <li>Check regulator datasheet for specific requirements</li>
+            <li>Monitor efficiency for battery-powered applications</li>
+          </ul>
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          Note: This calculator provides estimates for ideal conditions. Always consult component datasheets and consider safety margins in your final design.
+        </Typography>
       </Paper>
     </Container>
   );

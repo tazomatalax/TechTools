@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="64.260925mm"
+   height="15.296407mm"
+   viewBox="0 0 64.260925 15.296407"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   sodipodi:docname="Resistor.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="4.1585017"
+     inkscape:cx="118.67255"
+     inkscape:cy="47.733538"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="2552"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer2" />
+  <defs
+     id="defs1">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath32">
+      <g
+         id="g34"
+         clip-path="none"
+         inkscape:label="g8-mask">
+        <rect
+           style="fill:#f4e3d7;stroke-width:0.79375;stroke-linejoin:round"
+           id="rect32"
+           width="43.279842"
+           height="11.877213"
+           x="84.910538"
+           y="76.751984" />
+        <rect
+           style="fill:#f4e3d7;stroke-width:0.794;stroke-linejoin:round;stroke-dasharray:none"
+           id="rect33"
+           width="16.736071"
+           height="15.296407"
+           x="76.841965"
+           y="75.042389"
+           ry="6.0285854" />
+        <rect
+           style="fill:#f4e3d7;stroke-width:0.794;stroke-linejoin:round;stroke-dasharray:none"
+           id="rect34"
+           width="16.736071"
+           height="15.296407"
+           x="119.52289"
+           y="75.042389"
+           ry="6.0285854" />
+      </g>
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath32-1">
+      <g
+         id="g34-2"
+         clip-path="none"
+         inkscape:label="g8-mask">
+        <rect
+           style="fill:#f4e3d7;stroke-width:0.79375;stroke-linejoin:round"
+           id="rect32-3"
+           width="43.279842"
+           height="11.877213"
+           x="84.910538"
+           y="76.751984" />
+        <rect
+           style="fill:#f4e3d7;stroke-width:0.794;stroke-linejoin:round;stroke-dasharray:none"
+           id="rect33-3"
+           width="16.736071"
+           height="15.296407"
+           x="76.841965"
+           y="75.042389"
+           ry="6.0285854" />
+        <rect
+           style="fill:#f4e3d7;stroke-width:0.794;stroke-linejoin:round;stroke-dasharray:none"
+           id="rect34-4"
+           width="16.736071"
+           height="15.296407"
+           x="119.52289"
+           y="75.042389"
+           ry="6.0285854" />
+      </g>
+    </clipPath>
+  </defs>
+  <rect
+     style="fill:#b3b3b3;stroke-width:0.670706;stroke-linejoin:round;stroke-dasharray:none"
+     id="rect37"
+     width="64.260925"
+     height="3.7538562"
+     x="0"
+     y="5.7712784"
+     inkscape:label="wire" />
+  <g
+     inkscape:label="ResistorBG"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-71.366722,-75.042389)">
+    <g
+       id="g8"
+       clip-path="none"
+       transform="matrix(0.89184758,0,0,1,8.3106456,0)"
+       style="fill:#e9c6af">
+      <rect
+         style="fill:#e9c6af;stroke-width:0.79375;stroke-linejoin:round"
+         id="rect7"
+         width="43.279842"
+         height="11.877213"
+         x="84.910538"
+         y="76.751984" />
+      <rect
+         style="fill:#e9c6af;stroke-width:0.794;stroke-linejoin:round;stroke-dasharray:none"
+         id="rect8"
+         width="16.736071"
+         height="15.296407"
+         x="76.841965"
+         y="75.042389"
+         ry="6.0285854" />
+      <rect
+         style="fill:#e9c6af;stroke-width:0.794;stroke-linejoin:round;stroke-dasharray:none"
+         id="rect8-7"
+         width="16.736071"
+         height="15.296407"
+         x="119.52289"
+         y="75.042389"
+         ry="6.0285854" />
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Bands"
+     transform="translate(-71.366722,-75.042389)">
+    <rect
+       style="fill:#000000;stroke-width:0.804111;stroke-linejoin:round;stroke-dasharray:none"
+       id="band1"
+       width="5.5996118"
+       height="26.273832"
+       x="86.125252"
+       y="69.553673"
+       ry="3.9582851"
+       clip-path="url(#clipPath32)"
+       inkscape:label="band1"
+       transform="matrix(0.89184757,0,0,1,8.3106455,0)" />
+    <rect
+       style="fill:#000000;stroke-width:0.72168;stroke-linejoin:round;stroke-dasharray:none"
+       id="band2"
+       width="4.4537334"
+       height="11.877213"
+       x="93.565201"
+       y="76.751984"
+       ry="0"
+       inkscape:label="band2" />
+    <rect
+       style="fill:#000000;stroke-width:0.72168;stroke-linejoin:round;stroke-dasharray:none"
+       id="band3"
+       width="4.4537334"
+       height="11.877213"
+       x="102.00916"
+       y="76.751984"
+       ry="0"
+       inkscape:label="band3" />
+    <rect
+       style="fill:#e9c6af;stroke-width:0.72168;stroke-linejoin:round;stroke-dasharray:none"
+       id="band4"
+       width="4.4537334"
+       height="11.877213"
+       x="110.45311"
+       y="76.751984"
+       ry="0"
+       inkscape:label="band4" />
+    <rect
+       style="fill:#a0892c;stroke-width:0.879481;stroke-linejoin:round;stroke-dasharray:none"
+       id="bandTolerance"
+       width="5.1358423"
+       height="15.296407"
+       x="119.80193"
+       y="75.042389"
+       ry="0"
+       inkscape:label="bandTolerance" />
+  </g>
+</svg>

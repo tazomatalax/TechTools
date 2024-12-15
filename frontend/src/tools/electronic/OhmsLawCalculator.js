@@ -18,14 +18,12 @@ const OhmsLawCalculator = () => {
   const [values, setValues] = useState({
     voltage: '',
     current: '',
-    resistance: '',
-    power: ''
+    resistance: ''
   });
   const [units, setUnits] = useState({
     voltage: 'V',
     current: 'mA',
-    resistance: 'Ω',
-    power: 'W'
+    resistance: 'Ω'
   });
   const [solveFor, setSolveFor] = useState('resistance');
   const [result, setResult] = useState(null);
@@ -54,8 +52,7 @@ const OhmsLawCalculator = () => {
     setValues({
       voltage: '',
       current: '',
-      resistance: '',
-      power: ''
+      resistance: ''
     });
     setError('');
     setResult(null);
@@ -94,30 +91,11 @@ const OhmsLawCalculator = () => {
       }
     }
 
-    // Validate power if it's not being solved for
-    if (solveFor !== 'power' && values.power) {
-      const power = parseFloat(values.power);
-      if (isNaN(power) || power <= 0) {
-        errors.push('Power must be a positive number');
-      } else if (power > 1000000) { // 1MW limit
-        errors.push('Power exceeds maximum limit (1MW)');
-      }
-    }
-
     // Check if we have enough values based on what we're solving for
-    if (solveFor === 'power') {
-      // For power, we need any two of voltage, current, or resistance
-      const providedCount = ['voltage', 'current', 'resistance'].filter(field => values[field]).length;
-      if (providedCount < 2) {
-        errors.push('Please enter any two values from: voltage, current, resistance');
-      }
-    } else {
-      // For other calculations, we need both remaining values
-      const requiredFields = ['voltage', 'current', 'resistance'].filter(field => field !== solveFor);
-      const missingFields = requiredFields.filter(field => !values[field]);
-      if (missingFields.length > 0) {
-        errors.push(`Please enter values for: ${missingFields.join(', ')}`);
-      }
+    const requiredFields = ['voltage', 'current', 'resistance'].filter(field => field !== solveFor);
+    const missingFields = requiredFields.filter(field => !values[field]);
+    if (missingFields.length > 0) {
+      errors.push(`Please enter values for: ${missingFields.join(', ')}`);
     }
 
     return errors;
@@ -134,9 +112,6 @@ const OhmsLawCalculator = () => {
       case 'mΩ': return val * 0.001;
       case 'kΩ': return val * 1000;
       case 'MΩ': return val * 1000000;
-      case 'mW': return val * 0.001;
-      case 'kW': return val * 1000;
-      case 'MW': return val * 1000000;
       default: return val;
     }
   };
@@ -149,11 +124,10 @@ const OhmsLawCalculator = () => {
     }
 
     try {
-      // Convert all values to base units (V, A, Ω, W)
+      // Convert all values to base units (V, A, Ω)
       const voltage = solveFor !== 'voltage' ? convertToBaseUnits(values.voltage, units.voltage) : null;
       const current = solveFor !== 'current' ? convertToBaseUnits(values.current, units.current) : null;
       const resistance = solveFor !== 'resistance' ? convertToBaseUnits(values.resistance, units.resistance) : null;
-      const power = solveFor !== 'power' ? convertToBaseUnits(values.power, units.power) : null;
 
       let calculatedResult = {};
 
@@ -174,32 +148,10 @@ const OhmsLawCalculator = () => {
           calculatedResult.voltage = voltage;
           calculatedResult.current = current;
           break;
-        case 'power':
-          // Determine which values we have
-          if (voltage && current) {
-            calculatedResult.power = voltage * current;
-            calculatedResult.voltage = voltage;
-            calculatedResult.current = current;
-            calculatedResult.resistance = voltage / current;
-          } else if (voltage && resistance) {
-            calculatedResult.power = (voltage * voltage) / resistance;
-            calculatedResult.voltage = voltage;
-            calculatedResult.current = voltage / resistance;
-            calculatedResult.resistance = resistance;
-          } else if (current && resistance) {
-            calculatedResult.power = current * current * resistance;
-            calculatedResult.voltage = current * resistance;
-            calculatedResult.current = current;
-            calculatedResult.resistance = resistance;
-          }
-          break;
       }
 
-      // Calculate power if not already calculated
-      if (solveFor !== 'power') {
-        calculatedResult.power = calculatedResult.voltage * calculatedResult.current;
-      }
-
+      // Calculate power for display
+      calculatedResult.power = calculatedResult.voltage * calculatedResult.current;
       setResult(calculatedResult);
       setError('');
     } catch (err) {
@@ -270,7 +222,7 @@ const OhmsLawCalculator = () => {
               Ohm's Law Calculator
             </Typography>
             <Typography variant="body1" color="text.secondary" gutterBottom>
-              Calculate voltage, current, resistance, or power using Ohm's Law (V = IR) and Power (P = VI)
+              Calculate voltage, current, or resistance using Ohm's Law (V = IR)
             </Typography>
           </Grid>
 
@@ -281,7 +233,6 @@ const OhmsLawCalculator = () => {
                 <MenuItem value="voltage">Voltage (V = IR)</MenuItem>
                 <MenuItem value="current">Current (I = V/R)</MenuItem>
                 <MenuItem value="resistance">Resistance (R = V/I)</MenuItem>
-                <MenuItem value="power">Power (P = VI)</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -378,37 +329,6 @@ const OhmsLawCalculator = () => {
             </Grid>
           )}
 
-          {solveFor !== 'power' && (
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <TextField
-                  fullWidth
-                  label="Power"
-                  name="power"
-                  type="number"
-                  value={values.power}
-                  onChange={handleInputChange}
-                  InputProps={{
-                    sx: { bgcolor: 'background.default' }
-                  }}
-                />
-                <FormControl sx={{ minWidth: 100 }}>
-                  <InputLabel>Unit</InputLabel>
-                  <Select
-                    value={`power_${units.power}`}
-                    onChange={handleUnitChange}
-                    label="Unit"
-                  >
-                    <MenuItem value="power_mW">mW</MenuItem>
-                    <MenuItem value="power_W">W</MenuItem>
-                    <MenuItem value="power_kW">kW</MenuItem>
-                    <MenuItem value="power_MW">MW</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </Grid>
-          )}
-
           <Grid item xs={12}>
             <Button
               variant="contained"
@@ -474,7 +394,7 @@ const OhmsLawCalculator = () => {
         </Typography>
         <Typography component="div" variant="body2">
           <ul>
-            <li>Dynamic calculation of voltage, current, resistance, or power</li>
+            <li>Dynamic calculation of voltage, current, or resistance</li>
             <li>Real-time input validation</li>
             <li>Clear error messaging</li>
             <li>Automatic unit handling</li>
@@ -489,7 +409,6 @@ const OhmsLawCalculator = () => {
             <li>Voltage (V) = Current (I) × Resistance (R)</li>
             <li>Current (I) = Voltage (V) ÷ Resistance (R)</li>
             <li>Resistance (R) = Voltage (V) ÷ Current (I)</li>
-            <li>Power (P) = Voltage (V) × Current (I)</li>
           </ul>
         </Typography>
 
@@ -498,10 +417,9 @@ const OhmsLawCalculator = () => {
         </Typography>
         <Typography component="div" variant="body2">
           <ul>
-            <li>Select what you want to solve for (voltage, current, resistance, or power)</li>
+            <li>Select what you want to solve for (voltage, current, or resistance)</li>
             <li>Enter the known values in their respective fields</li>
             <li>Results are calculated automatically</li>
-            <li>Power is always calculated as an additional reference</li>
           </ul>
         </Typography>
 

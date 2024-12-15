@@ -1,12 +1,43 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { Box, Container } from '@mui/material';
-import Navigation from './components/Navigation';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Box, Container, CssBaseline } from '@mui/material';
+import Layout from './components/Layout';
 import Home from './pages/Home';
-import ElectronicTools from './pages/ElectronicTools';
-import SoftwareTools from './pages/SoftwareTools';
+import ElectronicDesignTools from './pages/ElectronicDesignTools';
+import SignalPowerTools from './pages/SignalPowerTools';
+import CommunicationTools from './pages/CommunicationTools';
+import DeveloperTools from './pages/DeveloperTools';
+import About from './pages/legal/About';
+import Privacy from './pages/legal/Privacy';
+import Terms from './pages/legal/Terms';
+import Contact from './pages/legal/Contact';
+
+// Import all tool components
+import OhmsLawCalculator from './tools/electronic/OhmsLawCalculator';
+import LedResistorCalculator from './tools/electronic/LedResistorCalculator';
+import ResistorColorCalculator from './tools/electronic/ResistorColorCalculator';
+import CapacitorCalculator from './tools/electronic/CapacitorCalculator';
+import VoltageDividerCalculator from './tools/electronic/VoltageDividerCalculator';
+import RcFilterCalculator from './tools/electronic/RcFilterCalculator';
+import ReactanceCalculator from './tools/electronic/ReactanceCalculator';
+import PcbTraceCalculator from './tools/electronic/PcbTraceCalculator';
+import BatteryLifeCalculator from './tools/electronic/BatteryLifeCalculator';
+import VoltageRegulatorCalculator from './tools/electronic/VoltageRegulatorCalculator';
+import AdcCalculator from './tools/electronic/AdcCalculator';
+import PwmDacCalculator from './tools/electronic/PwmDacCalculator';
+import BaseConverter from './tools/software/BaseConverter';
+import CrcCalculator from './tools/software/CrcCalculator';
+import SerialTerminal from './tools/software/SerialTerminal';
+import ModbusTerminal from './tools/software/ModbusTerminal';
+import ByteConverter from './tools/software/ByteConverter';
+import RegexTester from './tools/software/RegexTester';
+import JsonFormatter from './tools/software/JsonFormatter';
+import BinaryViewer from './tools/software/BinaryViewer';
+import ColorPicker from './tools/software/ColorPicker';
+import ImageConverter from './tools/software/ImageConverter';
+import AsciiTable from './tools/software/AsciiTable';
+import TerminalControls from './tools/software/TerminalControls';
 
 const theme = createTheme({
   palette: {
@@ -22,8 +53,8 @@ const theme = createTheme({
       dark: '#c51162',
     },
     background: {
-      default: '#121212',
-      paper: '#1e1e1e',
+      default: '#1a1a1a',
+      paper: '#242424',
     },
     text: {
       primary: '#ffffff',
@@ -70,6 +101,17 @@ const theme = createTheme({
     borderRadius: 8,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundImage: `linear-gradient(to bottom, rgba(26, 26, 26, 0.85), rgba(26, 26, 26, 0.85)), url(${process.env.PUBLIC_URL}/hexBg.svg)`,
+          backgroundSize: '230px 200px',
+          backgroundRepeat: 'repeat',
+          backgroundAttachment: 'fixed',
+          backgroundColor: '#1a1a1a',
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
@@ -110,36 +152,84 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            minHeight: '100vh',
-            bgcolor: 'background.default',
-          }}
-        >
-          <Navigation />
-          <Container 
-            component="main" 
-            maxWidth="xl" 
-            sx={{ 
-              flexGrow: 1, 
-              py: 4,
-              px: { xs: 2, sm: 4 },
-            }}
-          >
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/electronic-tools/*" element={<ElectronicTools />} />
-              <Route path="/software-tools/*" element={<SoftwareTools />} />
-            </Routes>
-          </Container>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          minHeight: '100vh',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: 'none',
+            background: 'radial-gradient(circle at 50% 50%, rgba(99, 132, 255, 0.1) 0%, rgba(26, 26, 26, 0) 70%)',
+          }
+        }}>
+          <Layout>
+            <Box sx={{ flex: '1 0 auto' }}>
+              <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+                <Routes>
+                  {/* Main category pages */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/electronic-tools" element={<ElectronicDesignTools />} />
+                  <Route path="/signal-power-tools" element={<SignalPowerTools />} />
+                  <Route path="/communication-tools" element={<CommunicationTools />} />
+                  <Route path="/developer-tools" element={<DeveloperTools />} />
+
+                  {/* Electronic Tools */}
+                  <Route path="/electronic-tools/ohms-law" element={<OhmsLawCalculator />} />
+                  <Route path="/electronic-tools/led-resistor" element={<LedResistorCalculator />} />
+                  <Route path="/electronic-tools/resistor-calculator" element={<ResistorColorCalculator />} />
+                  <Route path="/electronic-tools/capacitor-calculator" element={<CapacitorCalculator />} />
+                  <Route path="/electronic-tools/voltage-divider" element={<VoltageDividerCalculator />} />
+                  <Route path="/electronic-tools/rc-filter" element={<RcFilterCalculator />} />
+                  <Route path="/electronic-tools/reactance" element={<ReactanceCalculator />} />
+                  <Route path="/electronic-tools/pcb-trace" element={<PcbTraceCalculator />} />
+                  <Route path="/electronic-tools/battery-life" element={<BatteryLifeCalculator />} />
+                  <Route path="/electronic-tools/voltage-regulator" element={<VoltageRegulatorCalculator />} />
+
+                  {/* Software/Developer Tools */}
+                  <Route path="/developer-tools/base-converter" element={<BaseConverter />} />
+                  <Route path="/developer-tools/crc-calculator" element={<CrcCalculator />} />
+                  <Route path="/developer-tools/byte-converter" element={<ByteConverter />} />
+                  <Route path="/developer-tools/regex-tester" element={<RegexTester />} />
+                  <Route path="/developer-tools/json-formatter" element={<JsonFormatter />} />
+                  <Route path="/developer-tools/binary-viewer" element={<BinaryViewer />} />
+                  <Route path="/developer-tools/color-picker" element={<ColorPicker />} />
+                  <Route path="/developer-tools/image-converter" element={<ImageConverter />} />
+                  <Route path="/developer-tools/ascii-table" element={<AsciiTable />} />
+                  <Route path="/developer-tools/terminal-controls" element={<TerminalControls />} />
+
+                  {/* Communication Tools */}
+                  <Route path="/communication-tools/serial-terminal" element={<SerialTerminal />} />
+                  <Route path="/communication-tools/modbus-terminal" element={<ModbusTerminal />} />
+                  <Route path="/communication-tools/binary-viewer" element={<BinaryViewer />} />
+                  <Route path="/communication-tools/ascii-table" element={<AsciiTable />} />
+                  <Route path="/communication-tools/crc-calculator" element={<CrcCalculator />} />
+                  <Route path="/communication-tools/terminal-controls" element={<TerminalControls />} />
+
+                  {/* Signal & Power Tools */}
+                  <Route path="/signal-power-tools/rc-filter" element={<RcFilterCalculator />} />
+                  <Route path="/signal-power-tools/pwm-dac" element={<PwmDacCalculator />} />
+                  <Route path="/signal-power-tools/adc-calculator" element={<AdcCalculator />} />
+
+                  {/* Legal Pages */}
+                  <Route path="/about" element={<About />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/contact" element={<Contact />} />
+                </Routes>
+              </Container>
+            </Box>
+          </Layout>
           <Box 
             component="footer" 
             sx={{ 
               py: 3,
               px: 2,
-              mt: 'auto',
               backgroundColor: 'background.paper',
               borderTop: '1px solid rgba(255, 255, 255, 0.12)',
             }}

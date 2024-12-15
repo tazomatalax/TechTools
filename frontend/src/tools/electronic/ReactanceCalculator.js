@@ -243,6 +243,66 @@ const ReactanceCalculator = () => {
           </Box>
         )}
       </Paper>
+
+      <Paper elevation={3} sx={{ p: 4, mt: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          About this Tool
+        </Typography>
+        
+        <Typography variant="body1" paragraph>
+          The Reactance Calculator helps engineers and hobbyists calculate the impedance of capacitors and inductors at different frequencies. It's essential for AC circuit analysis, filter design, and resonant circuit calculations.
+        </Typography>
+
+        <Typography variant="subtitle1" sx={{ mt: 2 }} gutterBottom>
+          Key Concepts
+        </Typography>
+        <Typography component="div" variant="body2">
+          <ul>
+            <li><strong>Capacitive Reactance (Xc)</strong>: Opposition to AC current flow by a capacitor
+              <br />• Formula: Xc = 1/(2πfC)
+              <br />• Decreases with increasing frequency
+              <br />• Measured in ohms (Ω)
+            </li>
+            <li><strong>Inductive Reactance (Xl)</strong>: Opposition to AC current flow by an inductor
+              <br />• Formula: Xl = 2πfL
+              <br />• Increases with increasing frequency
+              <br />• Measured in ohms (Ω)
+            </li>
+            <li><strong>Phase Shift</strong>:
+              <br />• Capacitors: Current leads voltage by 90°
+              <br />• Inductors: Current lags voltage by 90°
+            </li>
+          </ul>
+        </Typography>
+
+        <Typography variant="subtitle1" sx={{ mt: 2 }} gutterBottom>
+          Applications
+        </Typography>
+        <Typography component="div" variant="body2">
+          <ul>
+            <li>Filter Design: Determining component values for high-pass, low-pass, and bandpass filters</li>
+            <li>Impedance Matching: Optimizing power transfer in RF circuits</li>
+            <li>Resonant Circuits: Calculating resonant frequencies for LC circuits</li>
+            <li>Power Factor Correction: Selecting appropriate components for PFC circuits</li>
+          </ul>
+        </Typography>
+
+        <Typography variant="subtitle1" sx={{ mt: 2 }} gutterBottom>
+          Usage Tips
+        </Typography>
+        <Typography component="div" variant="body2">
+          <ul>
+            <li>Enter component values in their base units or use the unit selector</li>
+            <li>Frequency can be entered in Hz, kHz, or MHz</li>
+            <li>The graph shows reactance variation across a frequency range</li>
+            <li>Note the logarithmic relationship between frequency and reactance</li>
+          </ul>
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          Note: This calculator assumes ideal components. Real components have parasitic effects (ESR, self-resonance) that affect behavior at extreme frequencies.
+        </Typography>
+      </Paper>
     </Container>
   );
 };

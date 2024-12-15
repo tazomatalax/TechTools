@@ -18,6 +18,7 @@ import {
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { styled, alpha } from '@mui/material/styles';
 import { visuallyHidden } from '@mui/utils';
+import AboutToolSection from '../../components/AboutToolSection';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   width: '16.66%', // Make all columns equal width
@@ -285,6 +286,40 @@ const AsciiTable = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <AboutToolSection
+        title="ASCII Table"
+        description="The ASCII Table is a comprehensive reference tool for viewing and working with ASCII characters. It provides detailed information about all 128 ASCII characters, including their decimal, hexadecimal, and binary representations, along with escape sequences and descriptions."
+        features={[
+          {
+            title: 'Interactive Features',
+            items: [
+              'Sort by any column (decimal, hex, binary, character, or escape sequence)',
+              'Search across all representations',
+              'One-click copy for any value',
+              'Color-coded display distinguishing control characters from printable ones'
+            ]
+          },
+          {
+            title: 'Character Information',
+            items: [
+              'Decimal (0-127)',
+              'Hexadecimal (0x00-0x7F)',
+              'Binary (8-bit representation)',
+              'Visual character representation',
+              'Escape sequences for special characters',
+              'Detailed character descriptions'
+            ]
+          }
+        ]}
+        useCases={[
+          'Character encoding and decoding',
+          'Programming string manipulation',
+          'Debugging text data',
+          'Learning about control characters',
+          'Converting between different number bases'
+        ]}
+      />
     </Box>
   );
 };

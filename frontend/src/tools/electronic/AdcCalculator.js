@@ -23,14 +23,18 @@ const AdcCalculator = () => {
   const defaultAdcRes = '10';
   const defaultQuiescentCurrent = '5';
   const defaultThermalResistance = '65';
+  const defaultR1 = '10';  // 10k by default
+  const defaultR2 = '10';  // 10k by default
 
   const [values, setValues] = useState({
     inputVoltageMin: '',
     inputVoltageMax: '',
     adcVoltageRef: defaultAdcRef,
     adcResolution: defaultAdcRes,
-    r1: '',
-    r2: '',
+    r1: defaultR1,
+    r2: defaultR2,
+    r1Unit: 'k',  // Default to kΩ
+    r2Unit: 'k',  // Default to kΩ
   });
 
   const [results, setResults] = useState(null);
@@ -41,6 +45,17 @@ const AdcCalculator = () => {
     100, 220, 330, 470, 680, 1000, 2200, 3300, 4700, 6800,
     10000, 22000, 33000, 47000, 68000, 100000, 220000, 330000, 470000, 1000000
   ];
+
+  const resistanceUnits = [
+    { value: '', label: 'Ω', multiplier: 1 },
+    { value: 'k', label: 'kΩ', multiplier: 1000 },
+    { value: 'M', label: 'MΩ', multiplier: 1000000 },
+  ];
+
+  const getResistanceInOhms = (value, unit) => {
+    const unitData = resistanceUnits.find(u => u.value === unit);
+    return parseFloat(value) * (unitData ? unitData.multiplier : 1);
+  };
 
   const handleInputChange = (event) => {
     setValues({
@@ -94,8 +109,15 @@ const AdcCalculator = () => {
       const Vin_max = parseFloat(values.inputVoltageMax);
       const Vadc = parseFloat(values.adcVoltageRef);
       const bits = parseInt(values.adcResolution);
-      const R1 = parseFloat(values.r1);
-      const R2 = parseFloat(values.r2);
+      
+      // Convert resistance values to ohms
+      const R1 = getResistanceInOhms(values.r1, values.r1Unit);
+      const R2 = getResistanceInOhms(values.r2, values.r2Unit);
+
+      // Input validation
+      if (isNaN(Vin_min) || isNaN(Vin_max) || isNaN(R1) || isNaN(R2)) {
+        throw new Error('Please fill in all required fields with valid numbers');
+      }
 
       if (Vin_max <= Vin_min) {
         throw new Error('Maximum voltage must be greater than minimum voltage');
@@ -103,6 +125,15 @@ const AdcCalculator = () => {
 
       if (R1 <= 0 || R2 <= 0) {
         throw new Error('Resistor values must be greater than 0');
+      }
+
+      // Check for reasonable resistance values
+      const totalResistance = R1 + R2;
+      if (totalResistance < 1000) { // Less than 1kΩ total
+        throw new Error('Total resistance is too low. Consider using higher values to limit current draw.');
+      }
+      if (totalResistance > 10000000) { // More than 10MΩ total
+        throw new Error('Total resistance is very high. This may lead to measurement errors due to noise.');
       }
 
       const ratio = R2 / (R1 + R2);
@@ -261,10 +292,22 @@ const AdcCalculator = () => {
                 type="number"
                 value={values.r1}
                 onChange={handleInputChange}
-                InputProps={{
-                  endAdornment: 'ohm',
-                }}
+                sx={{ flexGrow: 1 }}
               />
+              <FormControl sx={{ minWidth: 80 }}>
+                <Select
+                  value={values.r1Unit}
+                  name="r1Unit"
+                  onChange={handleInputChange}
+                  size="small"
+                >
+                  {resistanceUnits.map((unit) => (
+                    <MenuItem key={unit.value} value={unit.value}>
+                      {unit.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <Tooltip title="Top resistor in voltage divider">
                 <InfoIcon color="action" />
               </Tooltip>
@@ -280,10 +323,22 @@ const AdcCalculator = () => {
                 type="number"
                 value={values.r2}
                 onChange={handleInputChange}
-                InputProps={{
-                  endAdornment: 'ohm',
-                }}
+                sx={{ flexGrow: 1 }}
               />
+              <FormControl sx={{ minWidth: 80 }}>
+                <Select
+                  value={values.r2Unit}
+                  name="r2Unit"
+                  onChange={handleInputChange}
+                  size="small"
+                >
+                  {resistanceUnits.map((unit) => (
+                    <MenuItem key={unit.value} value={unit.value}>
+                      {unit.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <Tooltip title="Bottom resistor in voltage divider">
                 <InfoIcon color="action" />
               </Tooltip>
@@ -406,6 +461,95 @@ const AdcCalculator = () => {
             </Grid>
           </Box>
         )}
+      </Paper>
+
+      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          About this Tool
+        </Typography>
+          
+        <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+          Overview
+        </Typography>
+        <Typography paragraph>
+          This calculator helps design voltage dividers for Analog-to-Digital Converter (ADC) inputs. It ensures your input voltage is properly scaled 
+          to match your ADC's reference voltage while optimizing resolution and power consumption.
+        </Typography>
+
+        <Typography variant="subtitle1" gutterBottom>
+          Key Concepts
+        </Typography>
+        <Typography component="div">
+          <ul>
+            <li>
+              <strong>ADC Resolution:</strong> The number of bits determines the smallest voltage change that can be measured. 
+              More bits mean finer resolution but may require more careful design.
+            </li>
+            <li>
+              <strong>Reference Voltage:</strong> The maximum voltage the ADC can measure (typically 3.3V or 5V). Input voltages 
+              must be scaled to stay below this value.
+            </li>
+            <li>
+              <strong>Voltage Divider:</strong> Uses two resistors to scale down higher voltages to match the ADC's range. The ratio 
+              between these resistors determines the scaling factor.
+            </li>
+          </ul>
+        </Typography>
+
+        <Typography variant="subtitle1" gutterBottom>
+          Design Considerations
+        </Typography>
+        <Typography component="div">
+          <ul>
+            <li>
+              <strong>Resolution vs Range:</strong> Using the full ADC range maximizes effective resolution. The calculator helps 
+              optimize this balance.
+            </li>
+            <li>
+              <strong>Power Consumption:</strong> Lower resistance values draw more current. The calculator warns if values are too low.
+            </li>
+            <li>
+              <strong>Noise Immunity:</strong> Very high resistance values can make the circuit more susceptible to noise. The calculator 
+              suggests optimal ranges.
+            </li>
+          </ul>
+        </Typography>
+
+        <Typography variant="subtitle1" gutterBottom>
+          Common Applications
+        </Typography>
+        <Typography component="div">
+          <ul>
+            <li>Battery voltage monitoring</li>
+            <li>Power supply measurements</li>
+            <li>Sensor input scaling</li>
+            <li>Industrial process monitoring</li>
+            <li>Motor current sensing</li>
+          </ul>
+        </Typography>
+
+        <Typography variant="subtitle1" gutterBottom>
+          Usage Tips
+        </Typography>
+        <Typography component="div">
+          <ul>
+            <li>Start with the default 10kΩ values for most applications</li>
+            <li>Use 1% tolerance resistors for better accuracy</li>
+            <li>Add a small capacitor (0.1µF) across R2 for noise filtering</li>
+            <li>Consider temperature coefficients in critical applications</li>
+            <li>Use the recommended values when the calculator suggests optimizations</li>
+          </ul>
+        </Typography>
+
+        <Typography variant="subtitle1" gutterBottom sx={{ color: 'warning.main', mt: 2 }}>
+          Important Notes
+        </Typography>
+        <Typography paragraph color="warning.main">
+          • Ensure your input voltage source can handle the current draw through the voltage divider<br />
+          • Always verify the actual output with a multimeter before connecting to your ADC<br />
+          • Consider adding protection components (like TVS diodes) for sensitive ADC inputs<br />
+          • Results are theoretical; component tolerances will affect actual measurements
+        </Typography>
       </Paper>
     </Container>
   );

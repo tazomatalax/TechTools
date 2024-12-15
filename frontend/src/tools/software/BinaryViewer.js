@@ -18,7 +18,8 @@ import AboutToolSection from '../../components/AboutToolSection';
 const HexDisplay = styled('pre')(({ theme }) => ({
   margin: 0,
   padding: theme.spacing(2),
-  backgroundColor: theme.palette.grey[100],
+  backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
+  color: theme.palette.text.primary,
   borderRadius: theme.shape.borderRadius,
   fontFamily: 'monospace',
   overflow: 'auto',

@@ -20,7 +20,7 @@ const RCCircuitSchematic = ({ voltage, resistance, capacitance, outputVoltage, r
     <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
       <svg
         width="300"
-        height="180"
+        height="185"
         viewBox="0 0 79.375 47.652656"
         version="1.1"
       >
@@ -82,9 +82,9 @@ const RCCircuitSchematic = ({ voltage, resistance, capacitance, outputVoltage, r
           </text>
           {/* Resistance Label */}
           <text
-            x="93.53606"
-            y="134.36577"
-            style={{fontFamily: 'Arial', fontSize: '4.93889px', fill: 'currentColor'}}
+            x="97"
+            y="134"
+            style={{fontFamily: 'Arial', fontSize: '4.93889px', fill: 'currentColor', textAnchor: 'middle'}}
           >
             {formatResistance()}
           </text>

@@ -460,200 +460,202 @@ const TerminalControls = () => {
         Terminal Control Sequences
       </Typography>
 
-      <Box sx={{ mb: 2 }}>
-        <TextField
-          fullWidth
-          label="Search sequences"
-          variant="outlined"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-      </Box>
-
-      {Object.entries(filteredSequences).map(([category, sequences]) => (
-        <Accordion
-          key={category}
-          sx={{ mb: 1 }}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="h6" sx={{ textTransform: 'capitalize' }}>
-              {category}
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <TableContainer component={Paper}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Sequence</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Parameters</TableCell>
-                    <TableCell>Support</TableCell>
-                    <TableCell>Preview</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sequences.map((seq) => (
-                    <TableRow key={seq.name}>
-                      <TableCell>{seq.name}</TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <code>{seq.sequence}</code>
-                          <CopyButton
-                            text={seq.sequence}
-                            tooltip="Copy sequence"
-                          />
-                          <CopyButton
-                            text={seq.rawSequence}
-                            tooltip="Copy raw sequence"
-                          />
-                        </Box>
-                      </TableCell>
-                      <TableCell>{seq.description}</TableCell>
-                      <TableCell>
-                        {seq.params.map((param) => (
-                          <Chip
-                            key={param.name}
-                            label={`${param.name}=${param.default}`}
-                            size="small"
-                            sx={{ mr: 1, mb: 1 }}
-                          />
-                        ))}
-                      </TableCell>
-                      <TableCell>{seq.support}</TableCell>
-                      <TableCell>
-                        <Tooltip title="Try in preview">
-                          <IconButton
-                            size="small"
-                            onClick={() => handlePreviewClick(seq, 
-                              Object.fromEntries(seq.params.map(p => [p.name, p.default]))
-                            )}
-                          >
-                            <PlayArrowIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </AccordionDetails>
-        </Accordion>
-      ))}
-
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Terminal String
-        </Typography>
+      <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ mb: 2 }}>
           <TextField
             fullWidth
-            label="Test text"
+            label="Search sequences"
             variant="outlined"
-            value={previewText}
-            onChange={(e) => setPreviewText(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ mb: 2 }}
           />
         </Box>
-        {selectedSequence && (
-          <PreviewControls>
-            <Typography variant="subtitle1">
-              {selectedSequence.name}:
-            </Typography>
-            {selectedSequence.params.map((param) => (
-              <Box key={param.name}>
-                <TextField
-                  label={param.name}
-                  size="small"
-                  value={paramValues[param.name] || param.default}
-                  onChange={(e) => handleParamChange(param.name, e.target.value)}
-                  sx={{ width: 100 }}
-                />
-                {(selectedSequence.name.includes('Color') && param.name === 'n') && (
-                  <ColorPalette
-                    selectedColor={paramValues[param.name] || param.default}
-                    onColorSelect={(color) => handleParamChange(param.name, color)}
-                  />
-                )}
-              </Box>
-            ))}
-          </PreviewControls>
-        )}
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="subtitle1" gutterBottom>
-            Code String:
+
+        {Object.entries(filteredSequences).map(([category, sequences]) => (
+          <Accordion
+            key={category}
+            sx={{ mb: 1 }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" sx={{ textTransform: 'capitalize' }}>
+                {category}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Sequence</TableCell>
+                      <TableCell>Description</TableCell>
+                      <TableCell>Parameters</TableCell>
+                      <TableCell>Support</TableCell>
+                      <TableCell>Preview</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {sequences.map((seq) => (
+                      <TableRow key={seq.name}>
+                        <TableCell>{seq.name}</TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <code>{seq.sequence}</code>
+                            <CopyButton
+                              text={seq.sequence}
+                              tooltip="Copy sequence"
+                            />
+                            <CopyButton
+                              text={seq.rawSequence}
+                              tooltip="Copy raw sequence"
+                            />
+                          </Box>
+                        </TableCell>
+                        <TableCell>{seq.description}</TableCell>
+                        <TableCell>
+                          {seq.params.map((param) => (
+                            <Chip
+                              key={param.name}
+                              label={`${param.name}=${param.default}`}
+                              size="small"
+                              sx={{ mr: 1, mb: 1 }}
+                            />
+                          ))}
+                        </TableCell>
+                        <TableCell>{seq.support}</TableCell>
+                        <TableCell>
+                          <Tooltip title="Try in preview">
+                            <IconButton
+                              size="small"
+                              onClick={() => handlePreviewClick(seq, 
+                                Object.fromEntries(seq.params.map(p => [p.name, p.default]))
+                              )}
+                            >
+                              <PlayArrowIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </AccordionDetails>
+          </Accordion>
+        ))}
+
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Terminal String
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ mb: 2 }}>
             <TextField
               fullWidth
-              size="small"
-              value={toPrintableString(getTerminalString())}
-              InputProps={{
-                readOnly: true,
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Tooltip title="Copy to clipboard">
-                      <IconButton
-                        edge="end"
-                        onClick={() => {
-                          navigator.clipboard.writeText(toPrintableString(getTerminalString()));
-                          setCopySuccess(true);
-                          setTimeout(() => setCopySuccess(false), 2000);
-                        }}
-                      >
-                        {copySuccess ? <CheckIcon color="success" /> : <ContentCopyIcon />}
-                      </IconButton>
-                    </Tooltip>
-                  </InputAdornment>
-                ),
-              }}
+              label="Test text"
+              value={previewText}
+              onChange={(e) => setPreviewText(e.target.value)}
+              sx={{ mb: 2 }}
             />
           </Box>
+          {selectedSequence && (
+            <PreviewControls>
+              <Typography variant="subtitle1">
+                {selectedSequence.name}:
+              </Typography>
+              {selectedSequence.params.map((param) => (
+                <Box key={param.name}>
+                  <TextField
+                    label={param.name}
+                    size="small"
+                    value={paramValues[param.name] || param.default}
+                    onChange={(e) => handleParamChange(param.name, e.target.value)}
+                    sx={{ width: 100 }}
+                  />
+                  {(selectedSequence.name.includes('Color') && param.name === 'n') && (
+                    <ColorPalette
+                      selectedColor={paramValues[param.name] || param.default}
+                      onColorSelect={(color) => handleParamChange(param.name, color)}
+                    />
+                  )}
+                </Box>
+              ))}
+            </PreviewControls>
+          )}
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Code String:
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <TextField
+                fullWidth
+                size="small"
+                value={toPrintableString(getTerminalString())}
+                InputProps={{
+                  readOnly: true,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Tooltip title="Copy to clipboard">
+                        <IconButton
+                          edge="end"
+                          onClick={() => {
+                            navigator.clipboard.writeText(toPrintableString(getTerminalString()));
+                            setCopySuccess(true);
+                            setTimeout(() => setCopySuccess(false), 2000);
+                          }}
+                        >
+                          {copySuccess ? <CheckIcon color="success" /> : <ContentCopyIcon />}
+                        </IconButton>
+                      </Tooltip>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+          </Box>
+
+          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+            Visual Preview
+          </Typography>
+          <TerminalPreview>
+            {getVisualPreview()}
+          </TerminalPreview>
         </Box>
+      </Paper>
 
-        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-          Visual Preview
-        </Typography>
-        <TerminalPreview>
-          {getVisualPreview()}
-        </TerminalPreview>
-
-        <AboutToolSection
-          title="Terminal Controls"
-          description="Take the pain out of writing terminal control sequences and take back control of your terminal! This interactive tool helps developers work with ANSI/VT100 terminal control sequences, providing instant visual feedback and ready-to-use code snippets."
-          features={[
-            {
-              title: 'Interactive Controls',
-              items: [
-                'Visual preview of control sequences in real-time',
-                'Categorized sequences for cursor movement, colors, and text styling',
-                'Adjustable parameters with immediate visual feedback',
-                'Easy-to-copy code strings in proper escape sequence format'
-              ]
-            },
-            {
-              title: 'Color Support',
-              items: [
-                'Complete 256-color palette visualization',
-                'Standard 16-color ANSI support',
-                'RGB color cube for precise color selection',
-                'Grayscale ramp from black to white'
-              ]
-            },
-            {
-              title: 'Developer Experience',
-              items: [
-                'Search and filter control sequences by name or description',
-                'Copy-ready code strings for direct use in your projects',
-                'Comprehensive sequence descriptions and usage examples',
-                'Modern, intuitive interface for rapid sequence testing'
-              ]
-            }
-          ]}
-        />
-      </Box>
+      <AboutToolSection
+        title="Terminal Controls"
+        description="Take the pain out of writing terminal control sequences and take back control of your terminal! This interactive tool helps developers work with ANSI/VT100 terminal control sequences, providing instant visual feedback and ready-to-use code snippets."
+        features={[
+          {
+            title: 'Interactive Controls',
+            items: [
+              'Visual preview of control sequences in real-time',
+              'Categorized sequences for cursor movement, colors, and text styling',
+              'Adjustable parameters with immediate visual feedback',
+              'Easy-to-copy code strings in proper escape sequence format'
+            ]
+          },
+          {
+            title: 'Color Support',
+            items: [
+              'Complete 256-color palette visualization',
+              'Standard 16-color ANSI support',
+              'RGB color cube for precise color selection',
+              'Grayscale ramp from black to white'
+            ]
+          },
+          {
+            title: 'Developer Experience',
+            items: [
+              'Search and filter control sequences by name or description',
+              'Copy-ready code strings for direct use in your projects',
+              'Comprehensive sequence descriptions and usage examples',
+              'Modern, intuitive interface for rapid sequence testing'
+            ]
+          }
+        ]}
+      />
     </Box>
   );
 };
