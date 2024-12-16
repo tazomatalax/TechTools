@@ -152,122 +152,62 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          minHeight: '100vh',
-          position: 'relative',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            pointerEvents: 'none',
-            background: 'radial-gradient(circle at 50% 50%, rgba(99, 132, 255, 0.1) 0%, rgba(26, 26, 26, 0) 70%)',
-          }
-        }}>
+        <Box>
           <Layout>
-            <Box sx={{ flex: '1 0 auto' }}>
-              <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-                <Routes>
-                  {/* Main category pages */}
-                  <Route path="/" element={<Home />} />
-                  <Route path="/electronic-tools" element={<ElectronicDesignTools />} />
-                  <Route path="/signal-power-tools" element={<SignalPowerTools />} />
-                  <Route path="/communication-tools" element={<CommunicationTools />} />
-                  <Route path="/developer-tools" element={<DeveloperTools />} />
-
-                  {/* Electronic Tools */}
-                  <Route path="/electronic-tools/ohms-law" element={<OhmsLawCalculator />} />
-                  <Route path="/electronic-tools/led-resistor" element={<LedResistorCalculator />} />
-                  <Route path="/electronic-tools/resistor-calculator" element={<ResistorColorCalculator />} />
-                  <Route path="/electronic-tools/capacitor-calculator" element={<CapacitorCalculator />} />
-                  <Route path="/electronic-tools/voltage-divider" element={<VoltageDividerCalculator />} />
-                  <Route path="/electronic-tools/rc-filter" element={<RcFilterCalculator />} />
-                  <Route path="/electronic-tools/reactance" element={<ReactanceCalculator />} />
-                  <Route path="/electronic-tools/pcb-trace" element={<PcbTraceCalculator />} />
-                  <Route path="/electronic-tools/battery-life" element={<BatteryLifeCalculator />} />
-                  <Route path="/electronic-tools/voltage-regulator" element={<VoltageRegulatorCalculator />} />
-
-                  {/* Software/Developer Tools */}
-                  <Route path="/developer-tools/base-converter" element={<BaseConverter />} />
-                  <Route path="/developer-tools/crc-calculator" element={<CrcCalculator />} />
-                  <Route path="/developer-tools/byte-converter" element={<ByteConverter />} />
-                  <Route path="/developer-tools/regex-tester" element={<RegexTester />} />
-                  <Route path="/developer-tools/json-formatter" element={<JsonFormatter />} />
-                  <Route path="/developer-tools/binary-viewer" element={<BinaryViewer />} />
-                  <Route path="/developer-tools/color-picker" element={<ColorPicker />} />
-                  <Route path="/developer-tools/image-converter" element={<ImageConverter />} />
-                  <Route path="/developer-tools/ascii-table" element={<AsciiTable />} />
-                  <Route path="/developer-tools/terminal-controls" element={<TerminalControls />} />
-
-                  {/* Communication Tools */}
-                  <Route path="/communication-tools/serial-terminal" element={<SerialTerminal />} />
-                  <Route path="/communication-tools/modbus-terminal" element={<ModbusTerminal />} />
-                  <Route path="/communication-tools/binary-viewer" element={<BinaryViewer />} />
-                  <Route path="/communication-tools/ascii-table" element={<AsciiTable />} />
-                  <Route path="/communication-tools/crc-calculator" element={<CrcCalculator />} />
-                  <Route path="/communication-tools/terminal-controls" element={<TerminalControls />} />
-
-                  {/* Signal & Power Tools */}
-                  <Route path="/signal-power-tools/rc-filter" element={<RcFilterCalculator />} />
-                  <Route path="/signal-power-tools/pwm-dac" element={<PwmDacCalculator />} />
-                  <Route path="/signal-power-tools/adc-calculator" element={<AdcCalculator />} />
-
-                  {/* Legal Pages */}
-                  <Route path="/about" element={<About />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/contact" element={<Contact />} />
-                </Routes>
-              </Container>
-            </Box>
-          </Layout>
-          <Box 
-            component="footer" 
-            sx={{ 
-              py: 3,
-              px: 2,
-              backgroundColor: 'background.paper',
-              borderTop: '1px solid rgba(255, 255, 255, 0.12)',
-            }}
-          >
             <Container maxWidth="xl">
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  gap: 2,
-                }}
-              >
-                <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
-                  {new Date().getFullYear()} Tech Toolbox. All rights reserved.
-                </Box>
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    gap: 2,
-                    '& a': {
-                      color: 'text.secondary',
-                      textDecoration: 'none',
-                      '&:hover': {
-                        color: 'primary.main',
-                      },
-                    },
-                  }}
-                >
-                  <a href="/about">About</a>
-                  <a href="/privacy">Privacy</a>
-                  <a href="/terms">Terms</a>
-                  <a href="/contact">Contact</a>
-                </Box>
-              </Box>
+              <Routes>
+                {/* Main category pages */}
+                <Route path="/" element={<Home />} />
+                <Route path="/electronic-tools" element={<ElectronicDesignTools />} />
+                <Route path="/signal-power-tools" element={<SignalPowerTools />} />
+                <Route path="/communication-tools" element={<CommunicationTools />} />
+                <Route path="/developer-tools" element={<DeveloperTools />} />
+
+                {/* Electronic Tools */}
+                <Route path="/electronic-tools/ohms-law" element={<OhmsLawCalculator />} />
+                <Route path="/electronic-tools/led-resistor" element={<LedResistorCalculator />} />
+                <Route path="/electronic-tools/resistor-calculator" element={<ResistorColorCalculator />} />
+                <Route path="/electronic-tools/capacitor-calculator" element={<CapacitorCalculator />} />
+                <Route path="/electronic-tools/voltage-divider" element={<VoltageDividerCalculator />} />
+                <Route path="/electronic-tools/rc-filter" element={<RcFilterCalculator />} />
+                <Route path="/electronic-tools/reactance" element={<ReactanceCalculator />} />
+                <Route path="/electronic-tools/pcb-trace" element={<PcbTraceCalculator />} />
+                <Route path="/electronic-tools/battery-life" element={<BatteryLifeCalculator />} />
+                <Route path="/electronic-tools/voltage-regulator" element={<VoltageRegulatorCalculator />} />
+
+                {/* Software/Developer Tools */}
+                <Route path="/developer-tools/base-converter" element={<BaseConverter />} />
+                <Route path="/developer-tools/crc-calculator" element={<CrcCalculator />} />
+                <Route path="/developer-tools/byte-converter" element={<ByteConverter />} />
+                <Route path="/developer-tools/regex-tester" element={<RegexTester />} />
+                <Route path="/developer-tools/json-formatter" element={<JsonFormatter />} />
+                <Route path="/developer-tools/binary-viewer" element={<BinaryViewer />} />
+                <Route path="/developer-tools/color-picker" element={<ColorPicker />} />
+                <Route path="/developer-tools/image-converter" element={<ImageConverter />} />
+                <Route path="/developer-tools/ascii-table" element={<AsciiTable />} />
+                <Route path="/developer-tools/terminal-controls" element={<TerminalControls />} />
+
+                {/* Communication Tools */}
+                <Route path="/communication-tools/serial-terminal" element={<SerialTerminal />} />
+                <Route path="/communication-tools/modbus-terminal" element={<ModbusTerminal />} />
+                <Route path="/communication-tools/binary-viewer" element={<BinaryViewer />} />
+                <Route path="/communication-tools/ascii-table" element={<AsciiTable />} />
+                <Route path="/communication-tools/crc-calculator" element={<CrcCalculator />} />
+                <Route path="/communication-tools/terminal-controls" element={<TerminalControls />} />
+
+                {/* Signal & Power Tools */}
+                <Route path="/signal-power-tools/rc-filter" element={<RcFilterCalculator />} />
+                <Route path="/signal-power-tools/pwm-dac" element={<PwmDacCalculator />} />
+                <Route path="/signal-power-tools/adc-calculator" element={<AdcCalculator />} />
+
+                {/* Legal Pages */}
+                <Route path="/about" element={<About />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/contact" element={<Contact />} />
+              </Routes>
             </Container>
-          </Box>
+          </Layout>
         </Box>
       </Router>
     </ThemeProvider>
