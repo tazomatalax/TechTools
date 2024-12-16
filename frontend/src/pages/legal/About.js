@@ -15,8 +15,10 @@ function About() {
           </Typography>
           <Typography paragraph>
             Tech Tools is a comprehensive suite of utilities designed to assist engineers, developers, and tech enthusiasts 
-            in their daily work. Our mission is to provide high-quality, easy-to-use tools that streamline technical calculations 
-            and conversions.
+            in their electronic and software project development. Our mission is to provide high-quality, easy-to-use tools that streamline technical calculations 
+            and conversions. We often found in our own projects that the tools we needed were either not available or spread accross multiple platforms or websites.
+            We sought to create a one-stop place for all of the tools we use in our own projects, and we hope you find them useful as well! As needs arise we will continue to expand our collection of tools,
+            and we invite you to join our community of users and developers by suggesting new tools and features that you would find useful.
           </Typography>
         </Box>
 

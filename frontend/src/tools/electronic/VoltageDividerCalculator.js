@@ -375,76 +375,77 @@ const VoltageDividerCalculator = () => {
             </svg>
           </Box>
         </Box>
-
-        <Paper elevation={2} sx={{ p: 3, mt: 4, bgcolor: 'background.paper' }}>
-          <Typography variant="h6" gutterBottom>
-            About this Tool
-          </Typography>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            This calculator offers two modes:
-          </Typography>
-          <ul>
-            <li>
-              <Typography variant="body2" color="text.secondary">
-                <strong>Find R1:</strong> Calculate the required resistor values when you know your desired output voltage
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2" color="text.secondary">
-                <strong>Find Output Voltage:</strong> Calculate the output voltage when you know both resistor values
-              </Typography>
-            </li>
-          </ul>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            The interactive circuit diagram updates in real-time to show your current configuration. All resistor values can be entered in Ω, kΩ, or MΩ using the unit selectors.
-          </Typography>
-
-          <Typography variant="h6" sx={{ mt: 2 }} gutterBottom>
-            Formulas Used
-          </Typography>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            The voltage divider calculations are based on these fundamental formulas:
-          </Typography>
-          <ul>
-            <li>
-              <Typography variant="body2" color="text.secondary">
-                <strong>Output Voltage:</strong> Vout = Vin × (R2 / (R1 + R2))
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2" color="text.secondary">
-                <strong>Required R1:</strong> R1 = R2 × ((Vin / Vout) - 1)
-              </Typography>
-            </li>
-          </ul>
-          <Typography variant="body2" color="text.secondary">
-            Where:
-          </Typography>
-          <ul>
-            <li>
-              <Typography variant="body2" color="text.secondary">
-                Vin = Input voltage
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2" color="text.secondary">
-                Vout = Output voltage
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2" color="text.secondary">
-                R1 = Upper resistor value
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2" color="text.secondary">
-                R2 = Lower resistor value
-              </Typography>
-            </li>
-          </ul>
-        </Paper>
       </Paper>
-    </Container>
+
+      {/* About Panel */}
+      <Paper elevation={3} sx={{ p: 4, mt: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          About this Tool
+        </Typography>
+        <Typography variant="body2" color="text.secondary" paragraph>
+          This calculator offers two modes:
+        </Typography>
+        <ul>
+          <li>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Find R1:</strong> Calculate the required resistor values when you know your desired output voltage
+            </Typography>
+          </li>
+        <li>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Find Output Voltage:</strong> Calculate the output voltage when you know both resistor values
+          </Typography>
+        </li>
+      </ul>
+      <Typography variant="body2" color="text.secondary" paragraph>
+        The interactive circuit diagram updates in real-time to show your current configuration. All resistor values can be entered in Ω, kΩ, or MΩ using the unit selectors.
+      </Typography>
+
+      <Typography variant="h6" sx={{ mt: 2 }} gutterBottom>
+        Formulas Used
+      </Typography>
+      <Typography variant="body2" color="text.secondary" paragraph>
+        The voltage divider calculations are based on these fundamental formulas:
+      </Typography>
+      <ul>
+        <li>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Output Voltage:</strong> Vout = Vin × (R2 / (R1 + R2))
+          </Typography>
+        </li>
+        <li>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Required R1:</strong> R1 = R2 × ((Vin / Vout) - 1)
+          </Typography>
+        </li>
+      </ul>
+      <Typography variant="body2" color="text.secondary">
+        Where:
+      </Typography>
+      <ul>
+        <li>
+          <Typography variant="body2" color="text.secondary">
+            Vin = Input voltage
+          </Typography>
+        </li>
+        <li>
+          <Typography variant="body2" color="text.secondary">
+            Vout = Output voltage
+          </Typography>
+        </li>
+        <li>
+          <Typography variant="body2" color="text.secondary">
+            R1 = Upper resistor value
+          </Typography>
+        </li>
+        <li>
+          <Typography variant="body2" color="text.secondary">
+            R2 = Lower resistor value
+          </Typography>
+        </li>
+      </ul>
+    </Paper>
+  </Container>
   );
 };
 

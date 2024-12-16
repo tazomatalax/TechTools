@@ -126,12 +126,12 @@ const RegexTester = () => {
                 Matches ({matches.length})
               </Typography>
               {matches.map((match, index) => (
-                <Paper key={index} sx={{ p: 2, my: 1, bgcolor: 'grey.100' }}>
-                  <Typography>
+                <Paper key={index} sx={{ p: 2, my: 1, bgcolor: 'background.default', border: 1, borderColor: 'divider' }}>
+                  <Typography color="text.primary">
                     Match {index + 1}: "{match.match}" at index {match.index}
                   </Typography>
                   {match.groups.length > 0 && (
-                    <Typography>
+                    <Typography color="text.primary">
                       Groups: {match.groups.map((g, i) => `${i + 1}: "${g}"`).join(', ')}
                     </Typography>
                   )}
