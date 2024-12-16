@@ -16,7 +16,7 @@ function Contact() {
             Get in Touch
           </Typography>
           <Typography paragraph>
-            We value your feedback and are here to help with any questions or suggestions you may have 
+            We value your feedback and are here to help with any questions or suggestions you may have
             about Tech Tools.
           </Typography>
         </Box>
@@ -28,7 +28,7 @@ function Contact() {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <EmailIcon sx={{ mr: 2 }} />
             <Link href="mailto:tech.tools.feedback@gmail.com" underline="hover">
-              contact@techtoolbox.com
+              tech.tools.feedback@gmail.com
             </Link>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -44,7 +44,7 @@ function Contact() {
             Bug Reports & Feature Requests
           </Typography>
           <Typography paragraph>
-            Found a bug or have a feature suggestion? Please visit our GitHub repository to submit an 
+            Found a bug or have a feature suggestion? Please visit our GitHub repository to submit an
             issue or contribute to the project.
           </Typography>
         </Box>
