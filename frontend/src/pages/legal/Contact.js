@@ -27,13 +27,13 @@ function Contact() {
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <EmailIcon sx={{ mr: 2 }} />
-            <Link href="mailto:contact@techtoolbox.com" underline="hover">
+            <Link href="mailto:tech.tools.feedback@gmail.com" underline="hover">
               contact@techtoolbox.com
             </Link>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <GitHubIcon sx={{ mr: 2 }} />
-            <Link href="https://github.com/techtoolbox" target="_blank" rel="noopener noreferrer" underline="hover">
+            <Link href="https://github.com/TechTools-web/feedback" target="_blank" rel="noopener noreferrer" underline="hover">
               GitHub Repository
             </Link>
           </Box>

@@ -32,6 +32,18 @@ function Terms() {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h6" gutterBottom>
+            Advertising
+          </Typography>
+          <Typography paragraph>
+            Tech Tools displays advertisements provided by Google AdSense. By using our service, you agree 
+            to receive these advertisements. While we strive to ensure advertisements are appropriate and 
+            relevant, we are not responsible for the content of these advertisements. Any interaction with 
+            these advertisements is subject to Google's terms and policies.
+          </Typography>
+        </Box>
+
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
             Disclaimer
           </Typography>
           <Typography paragraph>
@@ -41,7 +53,7 @@ function Terms() {
           </Typography>
         </Box>
 
-        <Box>
+        <Box sx={{ mb: 4 }}>
           <Typography variant="h6" gutterBottom>
             Modifications
           </Typography>

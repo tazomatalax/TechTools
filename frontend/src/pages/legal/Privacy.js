@@ -14,8 +14,9 @@ function Privacy() {
             Data Collection
           </Typography>
           <Typography paragraph>
-            Tech Tools is designed with privacy in mind. We do not collect any personal information or track 
-            user behavior. All calculations and conversions are performed locally in your browser.
+            Tech Tools is designed with privacy in mind. While we do not directly collect personal information, 
+            we use Google AdSense on our website. Google AdSense may use cookies and other tracking technologies 
+            to collect data about your browsing behavior and interests to show you personalized ads.
           </Typography>
         </Box>
 
@@ -34,12 +35,14 @@ function Privacy() {
             Third-Party Services
           </Typography>
           <Typography paragraph>
-            Tech Tools does not integrate with any third-party analytics or tracking services. We believe 
-            in providing a clean, privacy-respecting experience for our users.
+            Tech Tools integrates Google AdSense to display advertisements. Google AdSense uses cookies 
+            and similar technologies to collect and process data about you. To learn more about how Google 
+            uses your data, please visit Google's Privacy & Terms site at https://policies.google.com/technologies/partner-sites.
+            You can opt out of personalized advertising by visiting Google's Ad Settings.
           </Typography>
         </Box>
 
-        <Box>
+        <Box sx={{ mb: 4 }}>
           <Typography variant="h6" gutterBottom>
             Updates to Privacy Policy
           </Typography>
